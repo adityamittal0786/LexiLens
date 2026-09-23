@@ -1,0 +1,6 @@
+{
+  "name": "LexiLens — AI Legal Document Intelligence",
+  "description": "Understand, compare, and navigate complex legal documents with LexiLens.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
