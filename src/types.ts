@@ -84,6 +84,10 @@ export interface BeforeYouSignItem {
   finding: string;
   clauseRef: string;
   lawyerPrompt: string;
+  domain?: 'payment' | 'termination' | 'liability' | 'ip' | 'confidentiality' | 'renewal' | 'governing_law' | string;
+  whatToLookFor?: string;
+  whyItMatters?: string;
+  whereItAppears?: string;
 }
 
 export interface LawyerQuestionGroup {
@@ -115,6 +119,14 @@ export interface ActionChecklistItem {
   category: string;
 }
 
+export interface PotentialNextStep {
+  id: string;
+  action: string;
+  rationale: string;
+  targetClauseRef?: string;
+  category: 'clarify' | 'negotiate' | 'review' | 'prepare' | 'compare';
+}
+
 export interface DocumentAnalysis {
   documentId: string;
   documentTitle: string;
@@ -135,6 +147,7 @@ export interface DocumentAnalysis {
   beforeYouSignScorecard: BeforeYouSignItem[];
   questionsForLawyer: LawyerQuestionGroup[];
   actionChecklist: ActionChecklistItem[];
+  potentialNextSteps?: PotentialNextStep[];
   analyzedAt: string;
   jurisdiction: Jurisdiction;
 }

@@ -32,24 +32,23 @@ export const LegalSafetyBanner: React.FC<LegalSafetyBannerProps> = ({
   return (
     <aside
       aria-label="Legal safety and jurisdiction notice"
-      className="bg-[#F8F8F5] hairline-b text-xs text-[#6B6A66] py-2 px-4 relative z-30"
+      className="bg-[#F8F8F5] hairline-b text-xs text-[#6B6A66] py-1.5 px-3 sm:px-6 relative z-30"
     >
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] font-semibold text-[#141413] uppercase tracking-wider">
-            Notice
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="font-mono text-[10px] font-semibold text-[#141413] uppercase tracking-wider shrink-0 bg-[#ECECE8] px-1.5 py-0.5 rounded">
+            Legal Notice
           </span>
-          <span className="text-[#C4C4BE]" aria-hidden="true">·</span>
-          <p className="text-[#4A4946] text-xs">
-            LexiLens provides legal information and document-analysis assistance, <span className="font-semibold text-[#141413]">not legal advice</span>.
+          <p className="text-[#4A4946] truncate">
+            LexiLens provides legal information & document intelligence, <strong className="font-semibold text-[#141413]">not legal advice</strong>.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-[#6B6A66]">Framework:</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[#6B6A66] hidden sm:inline text-[11px]">Framework:</span>
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-[#141413] hover:text-[#1E3A8A] font-medium flex items-center gap-1 cursor-pointer underline decoration-[#C4C4BE] underline-offset-2"
+            className="text-[#141413] hover:text-[#1E3A8A] font-medium flex items-center gap-1 cursor-pointer underline decoration-[#C4C4BE] underline-offset-2 text-[11px]"
           >
             <span>{getJurisdictionLabel(jurisdiction).split('(')[0].trim()}</span>
             <ChevronRight

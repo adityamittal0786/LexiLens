@@ -125,6 +125,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
       <div className="p-3 bg-[#F8F8F5] hairline-b flex flex-col gap-2">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-[#141413] font-semibold block">
+              YOUR DOCUMENT
+            </span>
             <h3 className="font-sans font-semibold text-xs text-[#141413] truncate" title={document.title}>
               {document.title}
             </h3>

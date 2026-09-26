@@ -112,6 +112,17 @@ export function compareDocumentTexts(
         unchanged++;
       } else {
         modified++;
+
+        // Extract key numerical, financial, and timeline figures for semantic change detection
+        const numPattern = /(?:₹|\$|€|£)?\s?\d+(?:,\d+)*(?:\.\d+)?\s*(?:days?|months?|weeks?|years?|%|percent)?/gi;
+        const numsA = secA.content.match(numPattern) || [];
+        const numsB = secB.content.match(numPattern) || [];
+
+        let semanticNote = `Terms in "${secA.title}" were amended between versions.`;
+        if (numsA.length > 0 && numsB.length > 0 && numsA.join(' ') !== numsB.join(' ')) {
+          semanticNote = `Key figures or timeline values changed: [${numsA.slice(0, 3).join(', ')}] in ${docATitle} vs [${numsB.slice(0, 3).join(', ')}] in ${docBTitle}.`;
+        }
+
         differences.push({
           id: `diff-${differences.length + 1}`,
           category: secA.category,
@@ -119,7 +130,7 @@ export function compareDocumentTexts(
           changeType: 'modified',
           docAQuote: secA.content.substring(0, 180),
           docBQuote: secB.content.substring(0, 180),
-          whatChanged: `Terms in "${secA.title}" were amended between versions.`,
+          whatChanged: semanticNote,
           plainMeaning: `The wording in this clause was updated. Review the specific commitments and rights allocated.`,
           potentialSignificance: `Wording changes directly alter rights, notice requirements, or operational obligations.`,
           questionsToConsider: `Does this revised phrasing reflect the terms agreed upon during commercial negotiations?`,

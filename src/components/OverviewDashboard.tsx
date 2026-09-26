@@ -204,89 +204,92 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const checkedCount = checklistItems.filter((i) => i.checked).length;
 
   return (
-    <div className="space-y-24 md:space-y-32 pb-24">
+    <div className="space-y-12 sm:space-y-16 lg:space-y-20 pb-16">
       {/* ─────────────────────────────────────────────────────────────
-          1. HERO SECTION: Minimal, Authoritative & Editorial
+          1. HERO SECTION: Immediate Clarity, Minimal & Authoritative
       ───────────────────────────────────────────────────────────── */}
-      <section className="pt-8 sm:pt-14 lg:pt-18">
+      <section className="pt-6 sm:pt-8 lg:pt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl space-y-6">
+          <div className="max-w-3xl space-y-4 sm:space-y-5">
             {/* Category Label: Unboxed text, zero pills */}
             <div className="flex items-center gap-2 text-xs font-mono tracking-widest uppercase text-[#6B6A66]">
               <span>Legal Document Intelligence</span>
               <span aria-hidden="true">·</span>
-              <span>Grounded Analysis</span>
+              <span>Grounded Verification</span>
             </div>
 
-            {/* Editorial Headline */}
-            <h1 className="font-serif text-5xl sm:text-6xl lg:text-7xl font-normal tracking-tight text-[#141413] leading-[1.05] text-balance">
-              Understand the fine print. <br />
-              <em className="italic font-normal text-[#1E3A8A]">Before it matters.</em>
+            {/* Editorial Headline: Optimized for 1280x720 and laptop viewports */}
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight text-[#141413] leading-[1.12] text-balance">
+              Understand what you're signing. <br />
+              <em className="italic font-normal text-[#1E3A8A]">Before you sign it.</em>
             </h1>
 
-            {/* Supporting Copy */}
-            <p className="text-base sm:text-lg text-[#4A4946] leading-relaxed max-w-2xl font-sans">
-              Turn complex legal documents into clear explanations, important clauses,
-              evidence, and actionable questions.
+            {/* Supporting Copy: 3 core questions answered */}
+            <p className="text-sm sm:text-base text-[#4A4946] leading-relaxed max-w-2xl font-sans">
+              LexiLens turns complex legal agreements into plain-language summaries, clear obligations,
+              items worth checking, and targeted questions for your lawyer.
             </p>
 
-            {/* Primary & Secondary Actions */}
-            <div className="flex flex-wrap items-center gap-3 pt-2">
+            {/* Obvious Primary Action + Effortless Secondary Action */}
+            <div className="flex flex-wrap items-center gap-3 pt-1">
               <button
                 onClick={onOpenUpload}
-                className="px-5 py-2.5 text-xs font-semibold text-white bg-[#141413] hover:bg-[#2C2C2A] rounded-md transition-colors cursor-pointer flex items-center gap-2"
+                className="px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-[#141413] hover:bg-[#2C2C2A] rounded-md transition-all cursor-pointer flex items-center gap-2 shadow-xs hover:shadow-sm"
               >
-                <Upload className="w-3.5 h-3.5" />
+                <Upload className="w-4 h-4" />
                 <span>Analyze a document</span>
               </button>
 
               <button
-                onClick={onLoadDemo}
-                className="px-5 py-2.5 text-xs font-medium text-[#141413] bg-white border border-[#E2E2DE] hover:border-[#141413]/30 rounded-md transition-colors cursor-pointer flex items-center gap-2"
+                onClick={() => {
+                  const el = document.getElementById('how-it-works');
+                  if (el) el.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-4 py-2.5 text-xs sm:text-sm font-medium text-[#141413] bg-white border border-[#E2E2DE] hover:border-[#141413]/40 rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
               >
-                <span>Explore demo</span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#6B6A66]" />
+                <span>See how it works</span>
+                <ChevronRight className="w-4 h-4 text-[#6B6A66]" />
               </button>
             </div>
           </div>
 
           {/* ─────────────────────────────────────────────────────────────
-              HERO PRODUCT VISUAL: Realistic Document-Analysis Interface
+              HERO PRODUCT VISUAL: Interactive Document Workspace Preview
           ───────────────────────────────────────────────────────────── */}
-          <div className="mt-12 sm:mt-16">
+          <div id="product" className="mt-8 sm:mt-10 scroll-mt-20">
             <div className="bg-white border border-[#E2E2DE] rounded-xl shadow-xs overflow-hidden">
               {/* Product Window Header */}
-              <div className="px-4 py-3 bg-[#F8F8F5] hairline-b flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="px-4 py-2.5 bg-[#F8F8F5] hairline-b flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
                   <div className="flex items-center gap-1.5" aria-hidden="true">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E4E4E0]" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E4E4E0]" />
                     <span className="w-2.5 h-2.5 rounded-full bg-[#E4E4E0]" />
                   </div>
-                  <span className="text-xs font-mono text-[#6B6A66]">
+                  <span className="text-xs font-mono text-[#6B6A66] truncate max-w-[240px] sm:max-w-none">
                     Master_Services_Agreement_v1.0.docx
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-[#6B6A66]">
+                <div className="flex items-center gap-2.5 text-xs text-[#6B6A66]">
                   <span className="font-mono text-[11px]">4,218 words</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="text-emerald-700 font-medium">Verified Grounded</span>
+                  <span aria-hidden="true" className="hidden sm:inline">·</span>
+                  <span className="text-emerald-700 font-medium hidden sm:inline">Verified Grounded</span>
                 </div>
               </div>
 
               {/* Product Workspace Split: Document (Left) + Intelligence (Right) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-[#E2E2DE]">
                 {/* Left Panel: Real Document Excerpt */}
-                <div className="lg:col-span-7 p-6 sm:p-8 space-y-6 bg-white">
-                  <div className="flex items-center justify-between text-xs text-[#6B6A66] hairline-b pb-3">
-                    <span className="uppercase font-mono tracking-wider text-[11px]">
-                      Document Excerpt
+                <div className="lg:col-span-7 p-4 sm:p-6 space-y-4 bg-white">
+                  <div className="flex items-center justify-between text-xs text-[#6B6A66] hairline-b pb-2.5">
+                    <span className="uppercase font-mono tracking-wider text-[11px] font-semibold text-[#141413]">
+                      YOUR DOCUMENT
                     </span>
-                    <span>Page 4 of 12</span>
+                    <span className="text-[11px] font-mono">Page 4 of 12</span>
                   </div>
 
                   {/* Document Clauses with interactive highlights */}
-                  <div className="space-y-4 font-serif text-sm leading-relaxed text-[#2C2C2A]">
+                  <div className="space-y-3 font-serif text-xs sm:text-sm leading-relaxed text-[#2C2C2A] max-h-[340px] sm:max-h-[380px] overflow-y-auto pr-1">
                     <div
                       onClick={() => setSelectedHeroClauseId('termination')}
                       className={`p-3 rounded-md transition-all cursor-pointer border ${
@@ -362,10 +365,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 </div>
 
                 {/* Right Panel: LexiLens Inspection & Plain English Insight */}
-                <div className="lg:col-span-5 p-6 sm:p-8 bg-[#FBFBFA] space-y-6">
-                  <div className="flex items-center justify-between text-xs text-[#6B6A66] hairline-b pb-3">
-                    <span className="uppercase font-mono tracking-wider text-[11px]">
-                      Clause Inspection
+                <div className="lg:col-span-5 p-4 sm:p-6 bg-[#FBFBFA] space-y-4">
+                  <div className="flex items-center justify-between text-xs text-[#6B6A66] hairline-b pb-2.5">
+                    <span className="uppercase font-mono tracking-wider text-[11px] font-semibold text-[#141413]">
+                      WHAT IT MEANS
                     </span>
                     <span className="font-mono text-[11px] text-emerald-800">
                       {activeHeroClause.confidence}
@@ -375,7 +378,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   {/* Active Clause Header */}
                   <div className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-sans font-semibold text-base text-[#141413]">
+                      <h3 className="font-sans font-semibold text-sm sm:text-base text-[#141413]">
                         {activeHeroClause.name}
                       </h3>
                       <span className="font-mono text-xs text-[#6B6A66]">
@@ -390,39 +393,39 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   </div>
 
                   {/* Plain English Translation */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#6B6A66]">
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-[#6B6A66]">
                       Plain English Meaning
                     </span>
-                    <p className="text-sm text-[#2C2C2A] leading-relaxed font-sans bg-white p-3.5 border border-[#E2E2DE] rounded-md">
+                    <p className="text-xs sm:text-sm text-[#2C2C2A] leading-relaxed font-sans bg-white p-3 border border-[#E2E2DE] rounded-md">
                       {activeHeroClause.plainEnglish}
                     </p>
                   </div>
 
                   {/* Party Obligations & Scope */}
-                  <div className="space-y-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#6B6A66]">
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-[#6B6A66]">
                       Affected Party
                     </span>
-                    <div className="p-3 bg-white border border-[#E2E2DE] rounded-md text-xs text-[#4A4946] flex items-center justify-between">
+                    <div className="p-2.5 bg-white border border-[#E2E2DE] rounded-md text-xs text-[#4A4946] flex items-center justify-between">
                       <span className="font-medium text-[#141413]">
                         {activeHeroClause.affectedParty}
                       </span>
-                      <span className="text-[#6B6A66]">Immediate legal effect upon signing</span>
+                      <span className="text-[#6B6A66] text-[11px]">Direct legal commitment</span>
                     </div>
                   </div>
 
                   {/* Clause Switcher Buttons */}
-                  <div className="pt-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-[#6B6A66] block mb-2">
-                      Inspect Other Key Clauses
+                  <div className="pt-1">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-[#6B6A66] block mb-1.5">
+                      Click to inspect clause:
                     </span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-1.5">
                       {HERO_CLAUSES.map((clause) => (
                         <button
                           key={clause.id}
                           onClick={() => setSelectedHeroClauseId(clause.id)}
-                          className={`px-2.5 py-1.5 text-xs text-left rounded border transition-colors ${
+                          className={`px-2 py-1.5 text-xs text-left rounded border transition-colors cursor-pointer ${
                             selectedHeroClauseId === clause.id
                               ? 'bg-[#141413] text-white border-[#141413]'
                               : 'bg-white text-[#4A4946] border-[#E2E2DE] hover:border-[#141413]/30'
@@ -438,7 +441,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   </div>
 
                   {/* Deep Dive Action */}
-                  <div className="pt-2 hairline-t">
+                  <div className="pt-1.5 hairline-t">
                     <button
                       onClick={() => onNavigateTab('workspace')}
                       className="w-full py-2 text-xs font-semibold text-[#141413] bg-white border border-[#141413] hover:bg-[#141413] hover:text-white rounded-md transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
@@ -540,22 +543,22 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           3. FROM DOCUMENT TO UNDERSTANDING: The 3-Step Transformation
       ───────────────────────────────────────────────────────────── */}
-      <section className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-          <div className="max-w-2xl space-y-3">
+      <section id="how-it-works" className="py-6 scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+          <div className="max-w-2xl space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
-              Transformation Architecture
+              How it works
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#141413]">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#141413]">
               From dense text to structured certainty.
             </h2>
-            <p className="text-sm sm:text-base text-[#4A4946]">
+            <p className="text-xs sm:text-sm text-[#4A4946]">
               LexiLens decomposes sprawling legal language into isolated clauses, verifiable
               citations, and structured questions.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
             {/* Step 1 */}
             <div className="bg-white p-6 sm:p-7 border border-[#E2E2DE] rounded-xl space-y-4">
               <span className="font-mono text-xs text-[#6B6A66] block">01 / INGESTION</span>
@@ -608,17 +611,17 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           4. SIGNATURE INTERACTION: Interactive Legal X-Ray
       ───────────────────────────────────────────────────────────── */}
-      <section className="py-12 hairline-t hairline-b bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <section id="features" className="py-10 hairline-t hairline-b bg-[#FAF9F6] scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-2 max-w-2xl">
+            <div className="space-y-1.5 max-w-2xl">
               <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
-                Signature Tool
+                Feature 01 · Visual Structure
               </span>
-              <h2 className="font-serif text-3xl sm:text-4xl text-[#141413]">
+              <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#141413]">
                 Legal X-Ray
               </h2>
-              <p className="text-sm text-[#4A4946]">
+              <p className="text-xs sm:text-sm text-[#4A4946]">
                 Filter the document by clause layers. See the exact structure hidden beneath the
                 prose.
               </p>
@@ -943,16 +946,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           8. TRUST & SAFETY: Calm, Grounded Security
       ───────────────────────────────────────────────────────────── */}
-      <section className="py-12 hairline-t hairline-b bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+      <section id="security" className="py-10 hairline-t hairline-b bg-[#FAF9F6] scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
           <div className="max-w-2xl space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
-              Engineering Principles
+              Security & Engineering
             </span>
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#141413]">
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl text-[#141413]">
               Trust, Privacy & Grounds
             </h2>
-            <p className="text-sm text-[#4A4946]">
+            <p className="text-xs sm:text-sm text-[#4A4946]">
               Designed with strict verification bounds, ephemeral memory, and zero hallucinated
               citations.
             </p>
@@ -1087,7 +1090,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* ─────────────────────────────────────────────────────────────
           10. RECENT DOCUMENTS & DEMO LAUNCHER
       ───────────────────────────────────────────────────────────── */}
-      <section className="py-6">
+      <section id="documents" className="py-6 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">

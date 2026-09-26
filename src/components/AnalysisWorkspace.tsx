@@ -25,6 +25,7 @@ import {
   Shield,
   Columns,
   Maximize2,
+  Compass,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -73,6 +74,8 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
 
   // Layout view mode: 'split' (doc + findings) vs 'findings-only' vs 'doc-only'
   const [viewMode, setViewMode] = useState<'split' | 'findings-only' | 'doc-only'>('split');
+  // Mobile active panel (< lg)
+  const [mobileActivePanel, setMobileActivePanel] = useState<'document' | 'analysis' | 'evidence'>('analysis');
 
   // Session-based version history initialization
   const baselineVersion: DocumentVersion = {
@@ -201,6 +204,9 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
     if (viewMode === 'findings-only') {
       setViewMode('split');
     }
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileActivePanel('document');
+    }
   };
 
   const handleClearHighlight = () => {
@@ -212,12 +218,18 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
     setSelectedItemForEvidence(clause);
     handleJumpToDocument(clause.quote, clause.docReference);
     setShowRightDrawer(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileActivePanel('evidence');
+    }
   };
 
   const handleSelectIssue = (issue: PotentialIssue) => {
     setSelectedItemForEvidence(issue);
     handleJumpToDocument(issue.evidence, issue.location);
     setShowRightDrawer(true);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setMobileActivePanel('evidence');
+    }
   };
 
   const handleSelectXRayNode = (node: XRayNode) => {
@@ -412,15 +424,48 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
         </div>
       </div>
 
+      {/* Mobile / Tablet Panel Switcher (< lg) */}
+      <div className="lg:hidden flex items-center bg-[#F8F8F5] hairline-b px-3 py-2 gap-1.5 text-xs overflow-x-auto shrink-0 border-t border-[#E2E2DE]">
+        <button
+          onClick={() => setMobileActivePanel('document')}
+          className={`px-3 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors ${
+            mobileActivePanel === 'document' ? 'bg-[#141413] text-white' : 'text-[#6B6A66] hover:text-[#141413] bg-white border border-[#E2E2DE]'
+          }`}
+        >
+          Original Contract
+        </button>
+        <button
+          onClick={() => setMobileActivePanel('analysis')}
+          className={`px-3 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 ${
+            mobileActivePanel === 'analysis' ? 'bg-[#141413] text-white' : 'text-[#6B6A66] hover:text-[#141413] bg-white border border-[#E2E2DE]'
+          }`}
+        >
+          <span>What It Means</span>
+        </button>
+        {selectedItemForEvidence && (
+          <button
+            onClick={() => setMobileActivePanel('evidence')}
+            className={`px-3 py-1.5 rounded text-xs font-medium cursor-pointer transition-colors flex items-center gap-1.5 ${
+              mobileActivePanel === 'evidence' ? 'bg-[#1E3A8A] text-white' : 'text-[#1E3A8A] bg-[#F2F4F8] border border-[#C7D4EA]'
+            }`}
+          >
+            <span>Evidence &amp; Source</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+          </button>
+        )}
+      </div>
+
       {/* Main Workspace Split Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative">
         {/* PANEL 1: Left Document Viewer */}
         {viewMode !== 'findings-only' && (
           <div
             className={`${
               viewMode === 'doc-only'
                 ? 'col-span-12'
-                : 'hidden lg:block lg:col-span-5'
+                : mobileActivePanel === 'document'
+                ? 'col-span-12 lg:col-span-6 2xl:col-span-5'
+                : 'hidden lg:block lg:col-span-6 2xl:col-span-5'
             } h-full overflow-hidden p-3`}
           >
             <DocumentViewer
@@ -437,14 +482,31 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
           <div
             className={`${
               viewMode === 'findings-only'
-                ? showRightDrawer && selectedItemForEvidence
-                  ? 'lg:col-span-9 col-span-12'
-                  : 'col-span-12'
-                : showRightDrawer && selectedItemForEvidence
-                ? 'lg:col-span-4 col-span-12'
-                : 'lg:col-span-7 col-span-12'
-            } h-full overflow-y-auto p-4 sm:p-5 space-y-5`}
+                ? 'col-span-12'
+                : mobileActivePanel === 'analysis'
+                ? 'col-span-12 lg:col-span-6 2xl:col-span-4'
+                : 'hidden lg:block lg:col-span-6 2xl:col-span-4'
+            } h-full overflow-y-auto p-4 sm:p-5 space-y-4`}
           >
+            {/* WHAT IT MEANS Header Banner */}
+            <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E2DE]">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded bg-[#141413] text-white text-[10px] font-mono uppercase tracking-wider font-semibold">
+                  WHAT IT MEANS
+                </span>
+                <span className="text-xs text-[#6B6A66] font-medium hidden sm:inline">
+                  Plain-English translation &amp; risk assessment
+                </span>
+              </div>
+              {selectedItemForEvidence && (
+                <button
+                  onClick={() => setShowRightDrawer(!showRightDrawer)}
+                  className="text-[11px] font-mono text-[#1E3A8A] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <span>{showRightDrawer ? 'Hide Evidence' : 'Show Evidence'}</span>
+                </button>
+              )}
+            </div>
             <AnimatePresence mode="wait">
               {/* SUBTAB 1: Summary & Vitals */}
               {activeSubTab === 'summary' && (
@@ -634,6 +696,100 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* Potential Next Steps to Consider (PromptWars Requirement #5 & #19) */}
+                  {analysis.potentialNextSteps && analysis.potentialNextSteps.length > 0 && (
+                    <div className="p-4 sm:p-5 rounded-lg bg-white border border-[#E2E2DE] shadow-xs space-y-3">
+                      <div className="flex items-center justify-between pb-2.5 hairline-b">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 rounded bg-[#F2F4F8] text-[#1E3A8A]">
+                            <Compass className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h4 className="text-xs font-semibold text-[#141413]">
+                                Potential Next Steps to Consider
+                              </h4>
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-mono bg-blue-50 text-blue-800 border border-blue-200">
+                                Guided Options
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-[#6B6A66]">
+                              Practical, non-prescriptive options to verify or negotiate based on contract findings.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={onOpenChecklist}
+                          className="text-[11px] font-mono text-[#1E3A8A] hover:underline flex items-center gap-1 cursor-pointer shrink-0"
+                        >
+                          <span>Action Center</span>
+                          <ArrowRight className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {analysis.potentialNextSteps.map((step) => {
+                          const categoryLabels: Record<string, string> = {
+                            clarify: 'Clarification',
+                            negotiate: 'Negotiation',
+                            review: 'Legal Review',
+                            prepare: 'Consultation Prep',
+                            compare: 'Diff Comparison',
+                          };
+                          const categoryStyles: Record<string, string> = {
+                            clarify: 'bg-amber-50 text-amber-800 border-amber-200',
+                            negotiate: 'bg-rose-50 text-rose-800 border-rose-200',
+                            review: 'bg-purple-50 text-purple-800 border-purple-200',
+                            prepare: 'bg-blue-50 text-blue-800 border-blue-200',
+                            compare: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                          };
+
+                          return (
+                            <div
+                              key={step.id}
+                              className="p-3 rounded-md bg-[#FAF9F6] border border-[#E8E8E4] flex flex-col justify-between gap-2 hover:border-[#141413] transition-colors"
+                            >
+                              <div>
+                                <div className="flex items-center justify-between gap-1.5 mb-1">
+                                  <span
+                                    className={`px-1.5 py-0.5 rounded text-[9px] font-mono uppercase font-semibold border ${
+                                      categoryStyles[step.category] || 'bg-slate-100 text-slate-800'
+                                    }`}
+                                  >
+                                    {categoryLabels[step.category] || step.category}
+                                  </span>
+                                  {step.targetClauseRef && (
+                                    <button
+                                      onClick={() => {
+                                        if (step.targetClauseRef === 'Lawyer Brief') {
+                                          onOpenBrief();
+                                        } else if (step.targetClauseRef === 'Contract Diff') {
+                                          onOpenChecklist();
+                                        } else {
+                                          setHighlightedSection(step.targetClauseRef || null);
+                                        }
+                                      }}
+                                      className="text-[10px] font-mono text-[#6B6A66] hover:text-[#141413] flex items-center gap-0.5 cursor-pointer"
+                                    >
+                                      <span>{step.targetClauseRef}</span>
+                                      <ExternalLink className="w-2.5 h-2.5" />
+                                    </button>
+                                  )}
+                                </div>
+                                <h5 className="text-xs font-semibold text-[#141413] leading-snug">
+                                  {step.action}
+                                </h5>
+                                <p className="text-[11px] text-[#4A4946] mt-1 leading-relaxed">
+                                  {step.rationale}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Missing Information Banner */}
                   {analysis.missingInformation.length > 0 && (
@@ -953,14 +1109,41 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
 
         {/* PANEL 3: Right Context / Evidence Drawer */}
         {showRightDrawer && selectedItemForEvidence && activeSubTab !== 'history' && viewMode !== 'doc-only' && (
-          <div className="col-span-12 lg:col-span-3 h-full overflow-hidden border-l border-slate-200 bg-white">
-            <EvidenceDrawer
-              selectedItem={selectedItemForEvidence}
-              onClose={() => setSelectedItemForEvidence(null)}
-              onJumpToDocument={handleJumpToDocument}
-              onAskQuestionAboutItem={(q) => onAskQuestion(q)}
-            />
-          </div>
+          <>
+            {/* Desktop 2XL docked column (spacious 1920x1080+ screens) */}
+            <div className="hidden 2xl:block 2xl:col-span-3 h-full overflow-hidden border-l border-[#E2E2DE] bg-white">
+              <EvidenceDrawer
+                selectedItem={selectedItemForEvidence}
+                onClose={() => setSelectedItemForEvidence(null)}
+                onJumpToDocument={handleJumpToDocument}
+                onAskQuestionAboutItem={(q) => onAskQuestion(q)}
+              />
+            </div>
+
+            {/* Laptop & Mobile slide-over drawer (< 2xl: prevents squishing center panel) */}
+            <div
+              className={`2xl:hidden ${
+                mobileActivePanel === 'evidence' ? 'block' : 'hidden lg:block'
+              } fixed inset-y-0 right-0 z-40 w-full sm:w-[420px] max-w-full h-full overflow-hidden border-l border-[#E2E2DE] bg-white shadow-2xl animate-in slide-in-from-right duration-200`}
+            >
+              <EvidenceDrawer
+                selectedItem={selectedItemForEvidence}
+                onClose={() => {
+                  setSelectedItemForEvidence(null);
+                  if (mobileActivePanel === 'evidence') {
+                    setMobileActivePanel('analysis');
+                  }
+                }}
+                onJumpToDocument={(q, s) => {
+                  handleJumpToDocument(q, s);
+                  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                    setMobileActivePanel('document');
+                  }
+                }}
+                onAskQuestionAboutItem={(q) => onAskQuestion(q)}
+              />
+            </div>
+          </>
         )}
       </div>
     </div>

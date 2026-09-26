@@ -56,8 +56,8 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
       {/* Header */}
       <div className="p-3.5 bg-[#F8F8F5] hairline-b flex items-center justify-between">
         <div className="min-w-0">
-          <span className="text-[10px] uppercase font-mono tracking-wider text-[#6B6A66] block">
-            Clause Inspection
+          <span className="text-[10px] uppercase font-mono tracking-wider text-[#141413] font-semibold block">
+            WHERE IT CAME FROM
           </span>
           <h4 className="text-xs font-semibold text-[#141413] truncate" title={selectedItem.title}>
             {selectedItem.title}

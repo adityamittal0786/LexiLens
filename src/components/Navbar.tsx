@@ -4,6 +4,8 @@ import {
   X,
   Upload,
   ArrowUpRight,
+  ChevronLeft,
+  FileText,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ActiveTab, LegalDocument } from '../types';
@@ -35,60 +37,158 @@ export const Navbar: React.FC<NavbarProps> = ({
     });
   }, []);
 
-  const navItems = [
-    { id: 'overview' as ActiveTab, label: 'Overview' },
-    { id: 'workspace' as ActiveTab, label: 'Review' },
-    { id: 'compare' as ActiveTab, label: 'Compare' },
-    { id: 'ask' as ActiveTab, label: 'Ask Lexi' },
-    { id: 'checklist' as ActiveTab, label: 'Checklist' },
-    { id: 'brief' as ActiveTab, label: 'Summary' },
-  ];
+  const handleNavClick = (sectionId: string) => {
+    if (activeTab !== 'overview') {
+      setActiveTab('overview');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 120);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const isInsideApp = activeTab !== 'overview';
 
   return (
     <header className="sticky top-0 z-40 bg-[#FBFBFA]/95 backdrop-blur-md hairline-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          {/* Zone 1: Single text element wordmark */}
-          <div className="flex items-center gap-6 shrink-0">
+        <div className="flex items-center justify-between h-13 sm:h-14">
+          {/* Left: Brand Wordmark */}
+          <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setActiveTab('overview')}
-              className="text-lg font-semibold tracking-tight text-[#141413] hover:text-[#1E3A8A] transition-colors cursor-pointer text-left font-sans"
+              className="group flex items-center gap-2 text-left cursor-pointer focus:outline-none"
               aria-label="LexiLens Home"
             >
-              LexiLens
+              <span className="text-base sm:text-lg font-semibold tracking-tight text-[#141413] group-hover:text-[#1E3A8A] transition-colors font-sans">
+                LexiLens
+              </span>
+              <span className="hidden xl:inline text-[11px] font-mono text-[#8C8B85] tracking-tight">
+                · Document Intelligence
+              </span>
             </button>
+
+            {/* In-app breadcrumb indicator when deep in workspace */}
+            {isInsideApp && (
+              <div className="hidden lg:flex items-center gap-1.5 pl-2 hairline-l text-xs text-[#6B6A66]">
+                <button
+                  onClick={() => setActiveTab('overview')}
+                  className="hover:text-[#141413] flex items-center gap-1 font-medium transition-colors"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Overview</span>
+                </button>
+                <span className="text-[#C4C4BE]" aria-hidden="true">/</span>
+                <span className="font-semibold text-[#141413] capitalize font-mono text-[11px]">
+                  {activeTab === 'workspace'
+                    ? 'Review Workspace'
+                    : activeTab === 'compare'
+                    ? 'Version Comparison'
+                    : activeTab === 'ask'
+                    ? 'Ask Lexi'
+                    : activeTab === 'checklist'
+                    ? 'Action Checklist'
+                    : 'Lawyer Brief'}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Zone 2: 4-6 clean text navigation links */}
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8">
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`text-xs font-medium transition-colors cursor-pointer relative py-1 ${
-                    isActive
-                      ? 'text-[#141413] font-semibold'
-                      : 'text-[#6B6A66] hover:text-[#141413]'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeNavIndicator"
-                      className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-[#141413]"
-                      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                    />
-                  )}
-                </button>
-              );
-            })}
-          </nav>
+          {/* Center Navigation: Clean Effortless Hierarchy */}
+          {!isInsideApp ? (
+            /* Main Landing Navigation (Simplified per user instruction: Product | How it works | Features | Security) */
+            <nav className="hidden md:flex items-center gap-7 lg:gap-9">
+              <button
+                onClick={() => handleNavClick('product')}
+                className="text-xs font-medium text-[#6B6A66] hover:text-[#141413] transition-colors cursor-pointer py-1"
+              >
+                Product
+              </button>
+              <button
+                onClick={() => handleNavClick('how-it-works')}
+                className="text-xs font-medium text-[#6B6A66] hover:text-[#141413] transition-colors cursor-pointer py-1"
+              >
+                How it works
+              </button>
+              <button
+                onClick={() => handleNavClick('features')}
+                className="text-xs font-medium text-[#6B6A66] hover:text-[#141413] transition-colors cursor-pointer py-1"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => handleNavClick('security')}
+                className="text-xs font-medium text-[#6B6A66] hover:text-[#141413] transition-colors cursor-pointer py-1"
+              >
+                Security
+              </button>
+            </nav>
+          ) : (
+            /* In-Product Workspace Mode Switcher: compact and clean */
+            <nav className="hidden md:flex items-center bg-[#F2F2EE] p-0.5 rounded-lg border border-[#E2E2DE] text-xs">
+              <button
+                onClick={() => setActiveTab('workspace')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'workspace'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+              >
+                Review
+              </button>
+              <button
+                onClick={() => setActiveTab('compare')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'compare'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+              >
+                Compare
+              </button>
+              <button
+                onClick={() => setActiveTab('ask')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'ask'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+              >
+                Ask Lexi
+              </button>
+              <button
+                onClick={() => setActiveTab('checklist')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'checklist'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+              >
+                Checklist
+              </button>
+              <button
+                onClick={() => setActiveTab('brief')}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer ${
+                  activeTab === 'brief'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+              >
+                Summary
+              </button>
+            </nav>
+          )}
 
-          {/* Zone 3: 1-2 primary actions */}
-          <div className="hidden sm:flex items-center gap-3 shrink-0">
-            {/* Live session synchronization indicator */}
+          {/* Right Actions: Primary "Try LexiLens" + Secondary Demo */}
+          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+            {/* Real-time status indicator */}
             <div
               className="flex items-center gap-1.5 text-[11px] text-[#6B6A66] font-mono mr-1"
               title={
@@ -104,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'bg-zinc-400'
                 }`}
               />
-              <span className="hidden lg:inline">{syncStatus === 'connected' ? 'Live' : 'Offline'}</span>
+              <span className="hidden xl:inline">{syncStatus === 'connected' ? 'Live' : 'Offline'}</span>
             </div>
 
             <button
@@ -116,14 +216,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={onOpenUpload}
-              className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#141413] hover:bg-[#2C2C2A] rounded-md transition-colors cursor-pointer flex items-center gap-1.5"
+              className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#141413] hover:bg-[#2C2C2A] rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Analyze Document</span>
+              <span>Try LexiLens</span>
             </button>
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <button
               onClick={onOpenUpload}
@@ -134,7 +234,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-[#4A4946] hover:text-[#141413] focus:outline-none"
+              className="p-1.5 text-[#4A4946] hover:text-[#141413] focus:outline-none"
               aria-label={mobileMenuOpen ? 'Close navigation' : 'Open navigation'}
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -153,26 +253,98 @@ export const Navbar: React.FC<NavbarProps> = ({
             transition={{ duration: 0.15 }}
             className="md:hidden bg-[#FBFBFA] hairline-b px-4 py-3 space-y-1.5"
           >
-            {navItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
+            {!isInsideApp ? (
+              <>
                 <button
-                  key={item.id}
                   onClick={() => {
-                    setActiveTab(item.id);
+                    handleNavClick('product');
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left ${
-                    isActive
-                      ? 'text-[#141413] bg-[#F2F2EE] font-semibold'
-                      : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F8F8F5]'
-                  }`}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-[#4A4946] hover:text-[#141413] hover:bg-[#F2F2EE] rounded-md transition-colors text-left"
                 >
-                  <span>{item.label}</span>
-                  {isActive && <ArrowUpRight className="w-3.5 h-3.5 text-[#141413]" />}
+                  <span>Product</span>
                 </button>
-              );
-            })}
+                <button
+                  onClick={() => {
+                    handleNavClick('how-it-works');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-[#4A4946] hover:text-[#141413] hover:bg-[#F2F2EE] rounded-md transition-colors text-left"
+                >
+                  <span>How it works</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleNavClick('features');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-[#4A4946] hover:text-[#141413] hover:bg-[#F2F2EE] rounded-md transition-colors text-left"
+                >
+                  <span>Features</span>
+                </button>
+                <button
+                  onClick={() => {
+                    handleNavClick('security');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-2 text-xs font-medium text-[#4A4946] hover:text-[#141413] hover:bg-[#F2F2EE] rounded-md transition-colors text-left"
+                >
+                  <span>Security</span>
+                </button>
+                <div className="pt-2 hairline-t">
+                  <button
+                    onClick={() => {
+                      setActiveTab('workspace');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-[#1E3A8A] hover:bg-[#F2F2EE] rounded-md transition-colors text-left"
+                  >
+                    <span>Open Workspace</span>
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setActiveTab('overview');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#141413] bg-[#F2F2EE] rounded-md transition-colors text-left"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>← Back to Overview</span>
+                </button>
+                {[
+                  { id: 'workspace' as ActiveTab, label: 'Review Workspace' },
+                  { id: 'compare' as ActiveTab, label: 'Version Comparison' },
+                  { id: 'ask' as ActiveTab, label: 'Ask Lexi' },
+                  { id: 'checklist' as ActiveTab, label: 'Action Checklist' },
+                  { id: 'brief' as ActiveTab, label: 'Lawyer Brief' },
+                ].map((item) => {
+                  const isActive = activeTab === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md transition-colors text-left ${
+                        isActive
+                          ? 'text-[#141413] bg-[#E8E8E4] font-semibold'
+                          : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F8F8F5]'
+                      }`}
+                    >
+                      <span>{item.label}</span>
+                      {isActive && <ArrowUpRight className="w-3.5 h-3.5 text-[#141413]" />}
+                    </button>
+                  );
+                })}
+              </>
+            )}
+
             <div className="pt-2 hairline-t flex gap-2">
               <button
                 onClick={() => {
@@ -190,7 +362,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 className="flex-1 py-2 text-xs font-medium text-white bg-[#141413] rounded-md text-center"
               >
-                Analyze Document
+                Try LexiLens
               </button>
             </div>
           </motion.div>
