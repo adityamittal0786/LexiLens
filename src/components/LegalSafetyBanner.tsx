@@ -34,7 +34,7 @@ export const LegalSafetyBanner: React.FC<LegalSafetyBannerProps> = ({
       aria-label="Legal safety and jurisdiction notice"
       className="bg-[#F8F8F5] hairline-b text-xs text-[#6B6A66] py-1.5 px-3 sm:px-6 relative z-30"
     >
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
+      <div className="w-full max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2 text-[11px] sm:text-xs">
         <div className="flex items-center gap-2 min-w-0">
           <span className="font-mono text-[10px] font-semibold text-[#141413] uppercase tracking-wider shrink-0 bg-[#ECECE8] px-1.5 py-0.5 rounded">
             Legal Notice
@@ -69,7 +69,7 @@ export const LegalSafetyBanner: React.FC<LegalSafetyBannerProps> = ({
             transition={{ duration: 0.15 }}
             className="overflow-hidden"
           >
-            <div className="max-w-7xl mx-auto mt-2 pt-2.5 hairline-t text-[#4A4946] grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
+            <div className="w-full max-w-[1600px] mx-auto mt-2 pt-2.5 hairline-t text-[#4A4946] grid grid-cols-1 md:grid-cols-2 gap-4 pb-2">
               <div className="p-3 bg-white border border-[#E2E2DE] rounded-md text-xs space-y-1">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-[#6B6A66] block">
                   Verification Principle

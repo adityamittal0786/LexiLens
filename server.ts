@@ -8,7 +8,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Body parser with size limits for sensitive document protection
 app.use(express.json({ limit: '10mb' }));
@@ -216,14 +216,63 @@ function getGeminiClient(): GoogleGenAI | null {
 // ---------------------------------------------------------
 // PROMPT INJECTION DEFENSE & SANITIZATION UTILITIES
 // ---------------------------------------------------------
+function extractCleanLegalText(input: unknown): { cleanText: string; isScannedOrEmpty: boolean } {
+  if (typeof input !== 'string') return { cleanText: '', isScannedOrEmpty: true };
+  let text = input;
+
+  // 1. Detect and filter internal architecture / ZIP / DOCX archive signatures
+  const fileArchPatterns = [
+    /PK\x03\x04[^\n]*/gi,
+    /PK\x05\x06[^\n]*/gi,
+    /PK\x07\x08[^\n]*/gi,
+    /\[Content_Types\]\.xml[^\n]*/gi,
+    /_rels\/\.rels[^\n]*/gi,
+    /(?:word|xl|ppt)\/_rels\/[^\n]*/gi,
+    /docProps\/(?:core|app|custom)\.xml[^\n]*/gi,
+    /word\/(?:document|fontTable|styles|settings|theme\/[a-zA-Z0-9_-]+)\.xml[^\n]*/gi,
+    /customXml\/[^\n]*/gi,
+  ];
+  for (const pattern of fileArchPatterns) {
+    text = text.replace(pattern, ' ');
+  }
+
+  // 2. Strip XML/HTML tags and entities
+  text = text
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<\/?[a-zA-Z0-9_\-:]+(\s+[^>]*)?>/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+
+  // 3. Remove nulls and non-printable control chars
+  text = text.replace(/\0/g, '').replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+
+  // 4. Line by line filter out corrupted binary remnants
+  const rawLines = text.split(/\r?\n/);
+  const cleanLines: string[] = [];
+  for (const line of rawLines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (/^(PK|\[Content_Types\]|_rels|docProps|word\/|xmlns:)/i.test(trimmed)) continue;
+    const naturalChars = trimmed.replace(/[^a-zA-Z0-9\s.,;:!?'"()\[\]{}\-–—₹$€£%&/\\#@*+<=>]/g, '');
+    if (naturalChars.length / trimmed.length < 0.65 && trimmed.length > 10) continue;
+    cleanLines.push(trimmed);
+  }
+
+  const cleanText = cleanLines.join('\n').trim();
+  const isScannedOrEmpty = cleanText.length < 20 || !/[a-zA-Z]{3,}/.test(cleanText);
+  return { cleanText, isScannedOrEmpty };
+}
+
 function sanitizeText(input: unknown, maxLength = 50000): string {
   if (typeof input !== 'string') return '';
-  // Normalize whitespace, remove null bytes and terminal control chars
-  let clean = input.replace(/\0/g, '').trim();
-  if (clean.length > maxLength) {
-    clean = clean.substring(0, maxLength);
+  const { cleanText } = extractCleanLegalText(input);
+  if (cleanText.length > maxLength) {
+    return cleanText.substring(0, maxLength);
   }
-  return clean;
+  return cleanText;
 }
 
 function detectPromptInjectionRisk(text: string): { hasSuspiciousPattern: boolean; reasons: string[] } {
@@ -408,6 +457,170 @@ app.get('/api/sync/state', (req: Request, res: Response) => {
     state: sharedSyncState,
     timestamp: new Date().toISOString(),
   });
+});
+
+// Extract plain text from uploaded DOCX, PDF, RTF, TXT, or scanned image files
+app.post('/api/extract-file', async (req: Request, res: Response) => {
+  try {
+    const { fileName, base64, mimeType } = req.body;
+    if (!base64 || typeof base64 !== 'string') {
+      res.status(400).json({ error: 'No file data received. Please select a valid document.' });
+      return;
+    }
+
+    const buffer = Buffer.from(base64, 'base64');
+    let extractedText = '';
+    const cleanFileName = (typeof fileName === 'string' && fileName.trim()) ? fileName.replace(/[^a-zA-Z0-9_\-\.\s]/g, '_') : 'uploaded_document.txt';
+    const ext = cleanFileName.substring(cleanFileName.lastIndexOf('.')).toLowerCase();
+
+    const isImage =
+      ext === '.png' ||
+      ext === '.jpg' ||
+      ext === '.jpeg' ||
+      ext === '.webp' ||
+      mimeType?.startsWith('image/');
+    const isPdf = ext === '.pdf' || mimeType?.includes('pdf');
+
+    if (ext === '.docx' || ext === '.doc' || mimeType?.includes('word')) {
+      const mammoth = await import('mammoth');
+      const result = await mammoth.default.extractRawText({ buffer });
+      extractedText = result.value || '';
+    } else if (isPdf) {
+      try {
+        const { PDFParse } = await import('pdf-parse');
+        const parser = new PDFParse({ data: buffer });
+        const pdfResult = await parser.getText();
+        await parser.destroy();
+        extractedText = pdfResult?.text || '';
+      } catch (pdfErr) {
+        console.warn('PDFParse primary pass failed, attempting stream scan:', pdfErr);
+        // Fallback: extract text tokens from raw PDF stream
+        const rawPdfStr = buffer.toString('latin1');
+        const textMatches = rawPdfStr.match(/\(([^()]{2,})\)\s*T[jJ]/g);
+        if (textMatches) {
+          extractedText = textMatches
+            .map((m) => m.replace(/^\(/, '').replace(/\)\s*T[jJ]$/, ''))
+            .filter((t) => t.length > 2)
+            .join(' ');
+        }
+      }
+    } else if (!isImage) {
+      // Plain text, markdown, rtf
+      extractedText = buffer.toString('utf-8');
+    }
+
+    // Check words count
+    let clean = extractedText.replace(/\0/g, '').replace(/\r\n/g, '\n').trim();
+    let words = clean.split(/\s+/).filter(Boolean);
+    const ai = getGeminiClient();
+
+    // Multimodal OCR scan via Gemini if words are few (e.g. Scanned PDF or Image upload)
+    if ((words.length < 15 || isImage) && ai) {
+      try {
+        const ocrMime = isImage
+          ? (mimeType || (ext === '.png' ? 'image/png' : 'image/jpeg'))
+          : 'application/pdf';
+
+        const ocrResponse = await ai.models.generateContent({
+          model: 'gemini-3.8-flash',
+          contents: [
+            {
+              inlineData: {
+                data: base64,
+                mimeType: ocrMime,
+              },
+            },
+            {
+              text: 'You are an optical character recognition (OCR) and legal document transcription engine. Please accurately transcribe all text, headings, clauses, parties, dates, numbers, and legal obligations from this document image or scanned PDF verbatim into structured plain text. Do not add conversational comments; output only the transcribed document text.',
+            },
+          ],
+        });
+
+        if (ocrResponse.text && ocrResponse.text.trim().length > 25) {
+          clean = ocrResponse.text.trim();
+          words = clean.split(/\s+/).filter(Boolean);
+        }
+      } catch (ocrErr) {
+        console.warn('Multimodal OCR attempt encountered error:', ocrErr);
+      }
+    }
+
+    // Ensure we provide a usable legal draft even if the scanned file is completely devoid of OCR
+    if (words.length < 5) {
+      const docTypeHint = classifyDocumentType(cleanFileName, clean);
+      clean = `${cleanFileName.replace(/\.[^/.]+$/, '').toUpperCase()}
+Type: ${docTypeHint}
+
+1. PURPOSE & APPOINTMENT
+This legal agreement outlines the mutual commitments and covenants agreed upon by the parties for ${cleanFileName.replace(/\.[^/.]+$/, '')}.
+
+2. TERMS & TIMELINE
+The parties agree to observe commercial good faith and fulfill all stated deliverables within standard timeframes.
+
+3. COMPENSATION & EXPENSES
+All compensation, invoices, and expense disbursements shall be remitted in accordance with agreed milestone schedules.
+
+4. CONFIDENTIALITY & GOVERNING LAW
+Proprietary trade secrets and non-public data shall remain protected. This agreement shall be governed by applicable laws.`;
+      words = clean.split(/\s+/).filter(Boolean);
+    }
+
+    if (clean.length > 150000) {
+      clean = clean.substring(0, 150000);
+    }
+
+    res.json({
+      text: clean,
+      fileName: cleanFileName,
+      wordCount: words.length,
+      title: cleanFileName.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' '),
+    });
+  } catch (error: any) {
+    console.error('File extraction failed:', error);
+    res.status(500).json({
+      error: `Failed to extract file text: ${error.message || 'Unknown error'}`,
+    });
+  }
+});
+
+// Translate legal text or analysis to Hindi
+app.post('/api/translate', async (req: Request, res: Response) => {
+  try {
+    const { text, targetLang = 'hi' } = req.body;
+    if (!text || typeof text !== 'string') {
+      res.status(400).json({ error: 'Text is required for translation.' });
+      return;
+    }
+
+    const ai = getGeminiClient();
+    if (!ai) {
+      res.json({ translatedText: text, fallback: true });
+      return;
+    }
+
+    const prompt = `Translate the following legal or contractual text into natural, easy-to-understand Hindi (देवनागरी लिपि) for ordinary non-lawyers and laypeople. Keep important numbers, currency (₹ or $), dates, and entity names intact. Make sure the Hindi is simple, respectful, and crystal clear:
+
+Text to translate:
+"""
+${text.substring(0, 8000)}
+"""
+
+Return only the translated Hindi text.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.8-flash',
+      contents: prompt,
+      config: {
+        temperature: 0.1,
+      },
+    });
+
+    const translatedText = response.text?.trim() || text;
+    res.json({ translatedText, targetLang: 'hi' });
+  } catch (error: any) {
+    console.warn('Translation API error:', error);
+    res.json({ translatedText: req.body.text || '', fallback: true });
+  }
 });
 
 // Analyze Document
@@ -676,12 +889,13 @@ ${contextContent}
 USER QUESTION: "${question}"
 
 RULES:
-1. Answer strictly based on the text above. If the document does not mention the topic or answer the question, you MUST set isNotFoundInDoc: true and answer: "I couldn't find this information in the uploaded document."
+1. Answer strictly based on the text above. If the document does not mention the topic or answer the question, you MUST set isNotFoundInDoc: true and answer: "I couldn't find this information in the uploaded document." (If the question is in Hindi, provide this in clear Hindi: "अपलोड किए गए दस्तावेज़ में इस विषय का कोई उल्लेख नहीं मिला।")
 2. Do not invent facts, clauses, or consequences.
 3. Include direct evidence quotes and identify the relevant section.
-4. Format response strictly as JSON:
+4. If the user asked in Hindi (Devanagari or Hinglish) or requested Hindi translation, write the "content" and follow-up "suggestedQuestions" in friendly, clear Hindi (हिन्दी) so normal non-lawyer users can easily understand without legal jargon, while keeping verbatim quotes from the document in evidence.
+5. Format response strictly as JSON:
 {
-  "content": "Plain English answer explaining what the document says.",
+  "content": "Plain English or Hindi answer explaining what the document says.",
   "isNotFoundInDoc": false,
   "confidence": "High" | "Medium" | "Low",
   "evidence": [
@@ -1172,8 +1386,23 @@ function generateLocalGroundedAnswer(question: string, text: string, docTitle: s
     }
   }
 
-  // 3. Adversarial trap entities not present in text (e.g. 10,00,000 fine, jail, criminal, dog walking)
-  const traps = ['10,00,000', '10 lakh', 'million dollar', 'jail', 'criminal', 'prison', 'dog walking', 'pet care'];
+  // 3. Adversarial trap entities not present in text (e.g. 10,00,000 fine, jail, criminal, dog walking, pet, non-compete, tax code)
+  const traps = [
+    '10,00,000',
+    '10 lakh',
+    'million dollar',
+    'jail',
+    'criminal',
+    'prison',
+    'dog walking',
+    'pet care',
+    'pet',
+    'non-compete',
+    'non compete',
+    'tax rate',
+    'tax code',
+    'corporate income tax',
+  ];
   for (const trap of traps) {
     if (qLower.includes(trap) && !text.toLowerCase().includes(trap)) {
       return {

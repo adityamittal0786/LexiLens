@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { analyzeDocumentAPI, askDocumentAPI, compareDocumentsAPI } from '../services/api';
+import {
+  analyzeDocumentAPI,
+  askDocumentAPI,
+  compareDocumentsAPI,
+  extractFileAPI,
+} from '../services/api';
 import { CONTRACT_V1_TEXT, SAMPLE_V1_ANALYSIS } from '../data/sampleContracts';
 
 describe('Services & API Fallback Robustness Tests', () => {
@@ -61,5 +66,27 @@ describe('Services & API Fallback Robustness Tests', () => {
     expect(result).toBeDefined();
     expect(result.differences.length).toBeGreaterThan(0);
     expect(result.stats).toBeDefined();
+  });
+
+  it('extractFileAPI sends base64 file data and returns parsed document text', async () => {
+    const mockFile = new File(['Contract body content with sections and clauses'], 'agreement.txt', {
+      type: 'text/plain',
+    });
+
+    // Mock global fetch
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        text: 'Contract body content with sections and clauses',
+        fileName: 'agreement.txt',
+        wordCount: 7,
+        title: 'agreement',
+      }),
+    } as any);
+
+    const extracted = await extractFileAPI(mockFile);
+    expect(extracted.text).toContain('Contract body content');
+    expect(extracted.fileName).toBe('agreement.txt');
+    expect(extracted.wordCount).toBe(7);
   });
 });

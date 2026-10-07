@@ -5,14 +5,18 @@ import {
   Check,
   FileText,
   Highlighter,
+  Languages,
+  Loader2,
 } from 'lucide-react';
-import { LegalDocument } from '../types';
+import { AppLanguage, LegalDocument } from '../types';
+import { translateTextAPI } from '../services/api';
 
 interface DocumentViewerProps {
   document: LegalDocument;
   highlightedText?: string | null;
   highlightedSection?: string | null;
   onClearHighlight?: () => void;
+  language?: AppLanguage;
 }
 
 export const DocumentViewer: React.FC<DocumentViewerProps> = ({
@@ -20,12 +24,35 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
   highlightedText,
   highlightedSection,
   onClearHighlight,
+  language = 'en',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
   const [showLineNumbers, setShowLineNumbers] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translationError, setTranslationError] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const showHindi = language !== 'en';
+  const displayText =
+    language === 'bilingual' && translatedText
+      ? `${document.rawText}\n\n--- हिन्दी अनुवाद ---\n${translatedText}`
+      : showHindi && translatedText
+      ? translatedText
+      : document.rawText;
+  const displayLines = displayText.split('\n');
+
+  useEffect(() => {
+    if (!showHindi || translatedText !== null || isTranslating) return;
+    setIsTranslating(true);
+    setTranslationError(null);
+    translateTextAPI(document.rawText)
+      .then(setTranslatedText)
+      .catch((error: Error) => setTranslationError(error.message))
+      .finally(() => setIsTranslating(false));
+  }, [document.rawText, isTranslating, showHindi, translatedText]);
 
   // Auto-scroll to highlighted text or section
   useEffect(() => {
@@ -50,11 +77,9 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const lines = document.rawText.split('\n');
-
   // Count search matches
   const matchCount = searchQuery
-    ? lines.filter((l) => l.toLowerCase().includes(searchQuery.toLowerCase())).length
+    ? displayLines.filter((l) => l.toLowerCase().includes(searchQuery.toLowerCase())).length
     : 0;
 
   // Render text with search highlighting and clause active highlighting
@@ -132,7 +157,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
               {document.title}
             </h3>
             <p className="text-[11px] font-mono text-[#6B6A66] truncate">
-              {document.wordCount} words · Verbatim Source
+              {document.wordCount} words · {showHindi ? 'Hindi translation' : 'Verbatim Source'}
             </p>
           </div>
 
@@ -185,6 +210,21 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
           </div>
         </div>
 
+        {showHindi && (
+          <div className="flex items-center gap-2 text-[11px] text-[#6B6A66]">
+            <Languages className="w-3.5 h-3.5" />
+            {isTranslating ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" /> Translating into simple Hindi…
+              </span>
+            ) : translationError ? (
+              <span className="text-amber-700">{translationError} Showing the original text.</span>
+            ) : (
+              <span>{language === 'bilingual' ? 'English source and Hindi translation' : 'सरल हिन्दी अनुवाद'}</span>
+            )}
+          </div>
+        )}
+
         {/* Search Input */}
         <div className="relative">
           <Search className="w-3.5 h-3.5 text-[#A3A29E] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -236,7 +276,7 @@ export const DocumentViewer: React.FC<DocumentViewerProps> = ({
           fontSize === 'sm' ? 'text-xs' : fontSize === 'lg' ? 'text-base' : 'text-sm'
         }`}
       >
-        {lines.map((line, idx) => renderLine(line, idx))}
+        {displayLines.map((line, idx) => renderLine(line, idx))}
       </div>
 
       {/* Bottom Footer Info */}

@@ -86,7 +86,7 @@ export const ComparisonWorkspace: React.FC<ComparisonWorkspaceProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 py-6 space-y-6">
       {/* Header Banner */}
       <div className="p-6 rounded-lg bg-white border border-[#E2E2DE] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -275,6 +275,17 @@ export const ComparisonWorkspace: React.FC<ComparisonWorkspaceProps> = ({
                       <Icon className="w-3 h-3" />
                       {badge.text}
                     </span>
+                    {diff.changeType === 'modified' && (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono border ${
+                          diff.isFormattingOnly
+                            ? 'bg-slate-50 text-slate-700 border-slate-200'
+                            : 'bg-amber-50 text-amber-800 border-amber-300 font-medium'
+                        }`}
+                      >
+                        {diff.isFormattingOnly ? 'Formatting Only' : 'Substantive Modification'}
+                      </span>
+                    )}
                     <h3 className="font-semibold text-sm text-[#141413]">
                       {diff.clauseTitle}
                     </h3>

@@ -74,6 +74,21 @@ function categorizeSectionTitle(title: string): string {
 /**
  * Compares two documents section-by-section and classifies differences.
  */
+function normalizeForFormattingComparison(text: string): string {
+  const numberWords: Record<string, string> = {
+    one: '1', two: '2', three: '3', four: '4', five: '5',
+    six: '6', seven: '7', eight: '8', nine: '9', ten: '10',
+    eleven: '11', twelve: '12', thirteen: '13', fourteen: '14', fifteen: '15',
+    twenty: '20', 'twenty-one': '21', 'twenty-four': '24', thirty: '30',
+    'forty-five': '45', sixty: '60', ninety: '90', hundred: '100',
+  };
+  let norm = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+  for (const [word, num] of Object.entries(numberWords)) {
+    norm = norm.replace(new RegExp(`\\b${word}\\b`, 'g'), num);
+  }
+  return norm.replace(/\s+/g, ' ').trim();
+}
+
 export function compareDocumentTexts(
   docATitle: string,
   docBTitle: string,
@@ -113,13 +128,19 @@ export function compareDocumentTexts(
       } else {
         modified++;
 
+        const isFormattingOnly =
+          normalizeForFormattingComparison(contentA) ===
+          normalizeForFormattingComparison(contentB);
+
         // Extract key numerical, financial, and timeline figures for semantic change detection
         const numPattern = /(?:₹|\$|€|£)?\s?\d+(?:,\d+)*(?:\.\d+)?\s*(?:days?|months?|weeks?|years?|%|percent)?/gi;
         const numsA = secA.content.match(numPattern) || [];
         const numsB = secB.content.match(numPattern) || [];
 
         let semanticNote = `Terms in "${secA.title}" were amended between versions.`;
-        if (numsA.length > 0 && numsB.length > 0 && numsA.join(' ') !== numsB.join(' ')) {
+        if (isFormattingOnly) {
+          semanticNote = `Formatting change: Numerical or stylistic wording variation (e.g. "30 days" vs "thirty days") without alteration to legal rights.`;
+        } else if (numsA.length > 0 && numsB.length > 0 && numsA.join(' ') !== numsB.join(' ')) {
           semanticNote = `Key figures or timeline values changed: [${numsA.slice(0, 3).join(', ')}] in ${docATitle} vs [${numsB.slice(0, 3).join(', ')}] in ${docBTitle}.`;
         }
 
@@ -128,12 +149,19 @@ export function compareDocumentTexts(
           category: secA.category,
           clauseTitle: secB.title || secA.title,
           changeType: 'modified',
+          isFormattingOnly,
           docAQuote: secA.content.substring(0, 180),
           docBQuote: secB.content.substring(0, 180),
           whatChanged: semanticNote,
-          plainMeaning: `The wording in this clause was updated. Review the specific commitments and rights allocated.`,
-          potentialSignificance: `Wording changes directly alter rights, notice requirements, or operational obligations.`,
-          questionsToConsider: `Does this revised phrasing reflect the terms agreed upon during commercial negotiations?`,
+          plainMeaning: isFormattingOnly
+            ? `The core legal commitments remain identical; only formatting or drafting phrasing was modified.`
+            : `The wording in this clause was updated. Review the specific commitments and rights allocated.`,
+          potentialSignificance: isFormattingOnly
+            ? `This appears to be primarily a drafting style or formatting change rather than a substantive alteration of legal commitments.`
+            : `Wording changes directly alter rights, notice requirements, or operational obligations.`,
+          questionsToConsider: isFormattingOnly
+            ? `Confirm that this stylistic phrasing aligns with organizational document standards.`
+            : `Does this revised phrasing reflect the terms agreed upon during commercial negotiations?`,
         });
       }
     } else {

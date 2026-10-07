@@ -26,6 +26,7 @@ import {
   Columns,
   Maximize2,
   Compass,
+  Sparkles,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -36,12 +37,15 @@ import {
   PartyObligation,
   XRayNode,
   DocumentVersion,
+  AppLanguage,
 } from '../types';
 import { DocumentViewer } from './DocumentViewer';
 import { EvidenceDrawer } from './EvidenceDrawer';
 import { LegalXRayView } from './LegalXRayView';
 import { BeforeYouSignScorecard } from './BeforeYouSignScorecard';
 import { VersionHistory } from './VersionHistory';
+import { PlainEnglishGuide } from './PlainEnglishGuide';
+import { NegotiationCopilot } from './NegotiationCopilot';
 
 interface AnalysisWorkspaceProps {
   document: LegalDocument;
@@ -50,6 +54,7 @@ interface AnalysisWorkspaceProps {
   onOpenChecklist: () => void;
   onOpenBrief: () => void;
   onUpdateDocument?: (updatedDoc: LegalDocument, newVersion: DocumentVersion) => void;
+  language?: AppLanguage;
 }
 
 export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
@@ -59,10 +64,12 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
   onOpenChecklist,
   onOpenBrief,
   onUpdateDocument,
+  language = 'en',
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<
-    'summary' | 'clauses' | 'issues' | 'xray' | 'beforesign' | 'history'
+    'summary' | 'plain_english' | 'clauses' | 'issues' | 'xray' | 'beforesign' | 'negotiation' | 'history'
   >('summary');
+  const [plainEnglishMode, setPlainEnglishMode] = useState(true);
   const [clauseCategoryFilter, setClauseCategoryFilter] = useState<string>('all');
   const [clauseSearchQuery, setClauseSearchQuery] = useState<string>('');
   const [issuesFilter, setIssuesFilter] = useState<string>('all');
@@ -271,9 +278,9 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
   });
 
   return (
-    <div className="h-[calc(100vh-100px)] min-h-[600px] flex flex-col bg-[#FBFBFA]">
+    <div className="h-[calc(100vh-100px)] min-h-0 flex flex-col bg-[#FBFBFA]">
       {/* Top Workspace Action Strip */}
-      <div className="bg-white hairline-b px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 shrink-0 z-20">
+      <div className="bg-white hairline-b px-3 sm:px-5 py-2 flex flex-wrap items-center justify-between gap-2 shrink-0 z-20">
         {/* Document Identifier */}
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded bg-[#F8F8F5] border border-[#E2E2DE] flex items-center justify-center text-[#141413] shrink-0">
@@ -295,7 +302,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
         </div>
 
         {/* Center Subtabs Navigation: Clean hairline tabs */}
-        <div className="flex items-center gap-1 text-xs overflow-x-auto">
+        <div className="flex-1 min-w-0 flex items-center justify-center gap-1 text-xs overflow-x-auto">
           <button
             onClick={() => setActiveSubTab('summary')}
             className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
@@ -304,7 +311,19 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Executive Summary</span>
+            <span>{language === 'hi' ? 'मुख्य सार' : 'Executive Summary'}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveSubTab('plain_english')}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'plain_english'
+                ? 'bg-[#141413] text-white'
+                : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>{language === 'hi' ? 'सरल भाषा गाइड' : 'Plain English Guide'}</span>
           </button>
 
           <button
@@ -315,7 +334,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Clauses</span>
+            <span>{language === 'hi' ? 'मुख्य धाराएं' : 'Clauses'}</span>
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
                 activeSubTab === 'clauses' ? 'bg-white/20 text-white' : 'bg-[#E8E8E4] text-[#4A4946]'
@@ -333,7 +352,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Watch-outs</span>
+            <span>{language === 'hi' ? 'जोखिम और सावधानियां' : 'Watch-outs'}</span>
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
                 activeSubTab === 'issues'
@@ -353,7 +372,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Legal X-Ray</span>
+            <span>{language === 'hi' ? 'कानूनी एक्स-रे' : 'Legal X-Ray'}</span>
           </button>
 
           <button
@@ -364,7 +383,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Before You Sign</span>
+            <span>{language === 'hi' ? 'हस्ताक्षर से पहले जांच' : 'Before You Sign'}</span>
           </button>
 
           <button
@@ -375,7 +394,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : 'text-[#6B6A66] hover:text-[#141413] hover:bg-[#F2F2EE]'
             }`}
           >
-            <span>Revisions</span>
+            <span>{language === 'hi' ? 'संशोधन' : 'Revisions'}</span>
             <span
               className={`px-1.5 py-0.2 rounded text-[10px] font-mono ${
                 activeSubTab === 'history' ? 'bg-white/20 text-white' : 'bg-[#E8E8E4] text-[#4A4946]'
@@ -383,6 +402,17 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
             >
               {versions.length}
             </span>
+          </button>
+          <button
+            onClick={() => setActiveSubTab('negotiation')}
+            className={`px-3 py-1.5 rounded-md font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'negotiation'
+                ? 'bg-indigo-900 text-white'
+                : 'text-indigo-900 hover:bg-indigo-50'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>{language === 'hi' ? 'बातचीत सहायक' : 'Negotiation Copilot'}</span>
           </button>
         </div>
 
@@ -456,7 +486,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
       </div>
 
       {/* Main Workspace Split Grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative">
+      <div className="flex-1 min-w-0 grid grid-cols-1 lg:grid-cols-12 overflow-hidden relative">
         {/* PANEL 1: Left Document Viewer */}
         {viewMode !== 'findings-only' && (
           <div
@@ -466,13 +496,14 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 : mobileActivePanel === 'document'
                 ? 'col-span-12 lg:col-span-6 2xl:col-span-5'
                 : 'hidden lg:block lg:col-span-6 2xl:col-span-5'
-            } h-full overflow-hidden p-3`}
+            } min-w-0 h-full overflow-hidden p-3`}
           >
             <DocumentViewer
               document={document}
               highlightedText={highlightedText}
               highlightedSection={highlightedSection}
               onClearHighlight={handleClearHighlight}
+              language={language}
             />
           </div>
         )}
@@ -484,9 +515,9 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
               viewMode === 'findings-only'
                 ? 'col-span-12'
                 : mobileActivePanel === 'analysis'
-                ? 'col-span-12 lg:col-span-6 2xl:col-span-4'
-                : 'hidden lg:block lg:col-span-6 2xl:col-span-4'
-            } h-full overflow-y-auto p-4 sm:p-5 space-y-4`}
+                ? `col-span-12 lg:col-span-6 ${selectedItemForEvidence ? '2xl:col-span-4' : '2xl:col-span-7'}`
+                : `hidden lg:block lg:col-span-6 ${selectedItemForEvidence ? '2xl:col-span-4' : '2xl:col-span-7'}`
+            } min-w-0 h-full overflow-y-auto p-4 sm:p-5 space-y-4`}
           >
             {/* WHAT IT MEANS Header Banner */}
             <div className="flex items-center justify-between pb-2.5 border-b border-[#E2E2DE]">
@@ -576,18 +607,41 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                     <div className="flex items-center justify-between mb-3 hairline-b pb-3">
                       <span className="text-xs font-mono uppercase tracking-wider text-[#141413] font-semibold flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-[#141413]" />
-                        Document Overview
+                        {language === 'hi' ? 'दस्तावेज़ का अवलोकन (Overview)' : 'Document Overview'}
                       </span>
                       <span className="text-[10px] font-mono text-[#6B6A66] bg-[#F8F8F5] px-2 py-0.5 rounded border border-[#E2E2DE]">
-                        Plain English
+                        {language === 'hi' ? 'सरल हिन्दी' : language === 'bilingual' ? 'द्विभाषी (Bilingual)' : 'Plain English'}
                       </span>
                     </div>
-                    <p className="text-xs sm:text-sm text-[#2C2C2A] leading-relaxed">
-                      {analysis.executiveSummary}
-                    </p>
+
+                    {language === 'hi' ? (
+                      <p className="text-xs sm:text-sm text-[#2C2C2A] leading-relaxed font-normal">
+                        {analysis.executiveSummaryHindi || analysis.executiveSummary}
+                      </p>
+                    ) : language === 'bilingual' ? (
+                      <div className="space-y-2">
+                        <p className="text-xs sm:text-sm text-[#141413] leading-relaxed font-medium">
+                          {analysis.executiveSummaryHindi || analysis.executiveSummary}
+                        </p>
+                        <p className="text-xs text-[#6B6A66] leading-relaxed italic border-t border-[#F2F2EE] pt-2">
+                          {analysis.executiveSummary}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm text-[#2C2C2A] leading-relaxed">
+                        {analysis.executiveSummary}
+                      </p>
+                    )}
+
                     <div className="mt-4 p-3.5 rounded bg-[#F8F8F5] border border-[#E8E8E4] flex items-start gap-2.5 text-xs text-[#2C2C2A]">
-                      <span className="font-semibold text-[#141413] shrink-0 font-mono text-[11px] uppercase">Core function:</span>
-                      <span className="leading-relaxed">{analysis.whatThisDocumentDoes}</span>
+                      <span className="font-semibold text-[#141413] shrink-0 font-mono text-[11px] uppercase">
+                        {language === 'hi' ? 'मुख्य उद्देश्य:' : 'Core function:'}
+                      </span>
+                      <span className="leading-relaxed">
+                        {language !== 'en' && analysis.whatThisDocumentDoesHindi
+                          ? analysis.whatThisDocumentDoesHindi
+                          : analysis.whatThisDocumentDoes}
+                      </span>
                     </div>
                   </div>
 
@@ -603,10 +657,12 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                         </div>
                         <div className="min-w-0">
                           <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B6A66] block mb-0.5">
-                            {p.shortLabel}
+                            {language !== 'en' && p.shortLabelHindi ? p.shortLabelHindi : p.shortLabel}
                           </span>
                           <h4 className="text-xs font-semibold text-[#141413] truncate">{p.name}</h4>
-                          <p className="text-[11px] text-[#6B6A66] mt-0.5">{p.role}</p>
+                          <p className="text-[11px] text-[#6B6A66] mt-0.5">
+                            {language !== 'en' && p.roleHindi ? p.roleHindi : p.role}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -617,9 +673,11 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-mono uppercase tracking-wider text-[#6B6A66] font-semibold flex items-center gap-1.5">
                         <Clock className="w-3.5 h-3.5 text-[#141413]" />
-                        Contractual Obligations by Party
+                        {language === 'hi' ? 'पक्षों के अनुबंधीय दायित्व' : 'Contractual Obligations by Party'}
                       </h3>
-                      <span className="text-[11px] font-mono text-[#6B6A66]">Commitments & timelines</span>
+                      <span className="text-[11px] font-mono text-[#6B6A66]">
+                        {language === 'hi' ? 'दायित्व और समयसीमा' : 'Commitments & timelines'}
+                      </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -808,6 +866,24 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 </motion.div>
               )}
 
+              {/* SUBTAB: Plain English Guide for Everyday Users */}
+              {activeSubTab === 'plain_english' && (
+                <motion.div
+                  key="plain_english"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <PlainEnglishGuide
+                    analysis={analysis}
+                    onAskQuestion={onAskQuestion}
+                    onOpenChecklist={onOpenChecklist}
+                    language={language}
+                  />
+                </motion.div>
+              )}
+
               {/* SUBTAB 2: Clause Explorer */}
               {activeSubTab === 'clauses' && (
                 <motion.div
@@ -856,6 +932,18 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                           {cat === 'all' ? 'All Clauses' : cat}
                         </button>
                       ))}
+
+                      <button
+                        onClick={() => setPlainEnglishMode(!plainEnglishMode)}
+                        className={`ml-auto px-2.5 py-1 rounded text-xs font-mono whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 border ${
+                          plainEnglishMode
+                            ? 'bg-amber-500/15 border-amber-300 text-amber-900 font-semibold'
+                            : 'bg-white text-[#6B6A66] border-[#E2E2DE] hover:border-[#141413]'
+                        }`}
+                      >
+                        <Sparkles className="w-3 h-3 text-amber-700" />
+                        <span>{plainEnglishMode ? 'Plain English: ON' : 'Show Legalese'}</span>
+                      </button>
                     </div>
                   </div>
 
@@ -886,20 +974,46 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                         </div>
 
                         {/* Plain English Translation Card */}
-                        <div className="p-3 rounded bg-[#F8F8F5] border border-[#E8E8E4] mb-2.5 text-xs text-[#2C2C2A] leading-relaxed">
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B6A66] block mb-0.5">
-                            Plain English Meaning
-                          </span>
-                          {clause.plainEnglish}
-                        </div>
+                        {plainEnglishMode ? (
+                          <div className="p-3.5 rounded-lg bg-amber-50/50 border border-amber-200/80 mb-2.5 text-xs text-[#141413] leading-relaxed space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-900 font-semibold flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-amber-700" />
+                                In Plain English (No Jargon)
+                              </span>
+                              <span className="text-[10px] text-amber-800 font-mono">
+                                Affects: {clause.whoItAffects}
+                              </span>
+                            </div>
+                            <p className="font-sans text-xs sm:text-[13px] text-[#141413] leading-relaxed">
+                              {clause.plainEnglish}
+                            </p>
+                            {clause.potentialConcern && (
+                              <div className="pt-1 text-[11px] text-amber-950 font-medium flex items-start gap-1">
+                                <span className="font-mono text-amber-800">⚠️ Watch out:</span>
+                                <span>{clause.potentialConcern}</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="p-3 rounded bg-[#F8F8F5] border border-[#E8E8E4] mb-2.5 text-xs text-[#2C2C2A] leading-relaxed">
+                            <span className="text-[10px] font-mono uppercase tracking-wider text-[#6B6A66] block mb-0.5">
+                              Plain English Meaning
+                            </span>
+                            {clause.plainEnglish}
+                          </div>
+                        )}
 
                         {/* Original Contract Quote */}
                         <div className="p-2.5 bg-[#FAF9F6] rounded border border-[#E8E8E4] text-[11px] text-[#4A4946] italic font-serif mb-2.5 line-clamp-2">
+                          <span className="not-italic font-mono text-[9px] uppercase tracking-wider text-[#6B6A66] block mb-0.5">
+                            Original Contract Text
+                          </span>
                           "{clause.quote}"
                         </div>
 
                         <div className="pt-2 hairline-t flex items-center justify-between text-[11px] text-[#6B6A66]">
-                          <span className="font-mono">Affects: <strong className="text-[#141413] font-semibold">{clause.whoItAffects}</strong></span>
+                          <span className="font-mono">Who Carries Burden: <strong className="text-[#141413] font-semibold">{clause.whoItAffects}</strong></span>
                           <span className="text-[#1E3A8A] flex items-center gap-1 font-medium hover:underline">
                             Inspect in Document <ChevronRight className="w-3 h-3" />
                           </span>
@@ -1103,6 +1217,22 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                   />
                 </motion.div>
               )}
+
+              {activeSubTab === 'negotiation' && (
+                <motion.div
+                  key="negotiation"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <NegotiationCopilot
+                    analysis={analysis}
+                    language={language}
+                    onAskQuestion={onAskQuestion}
+                  />
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         )}
@@ -1117,6 +1247,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                 onClose={() => setSelectedItemForEvidence(null)}
                 onJumpToDocument={handleJumpToDocument}
                 onAskQuestionAboutItem={(q) => onAskQuestion(q)}
+                language={language}
               />
             </div>
 
@@ -1141,6 +1272,7 @@ export const AnalysisWorkspace: React.FC<AnalysisWorkspaceProps> = ({
                   }
                 }}
                 onAskQuestionAboutItem={(q) => onAskQuestion(q)}
+                language={language}
               />
             </div>
           </>

@@ -6,9 +6,10 @@ import {
   ArrowUpRight,
   ChevronLeft,
   FileText,
+  Languages,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ActiveTab, LegalDocument } from '../types';
+import { ActiveTab, LegalDocument, AppLanguage } from '../types';
 import { realtimeSync, ConnectionStatus } from '../services/realtimeSync';
 
 interface NavbarProps {
@@ -17,6 +18,8 @@ interface NavbarProps {
   activeDoc: LegalDocument | null;
   onOpenUpload: () => void;
   onLoadDemo: () => void;
+  language?: AppLanguage;
+  onSelectLanguage?: (lang: AppLanguage) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -25,6 +28,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeDoc,
   onOpenUpload,
   onLoadDemo,
+  language = 'en',
+  onSelectLanguage,
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<ConnectionStatus>(realtimeSync.status);
@@ -58,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-[#FBFBFA]/95 backdrop-blur-md hairline-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7">
         <div className="flex items-center justify-between h-13 sm:h-14">
           {/* Left: Brand Wordmark */}
           <div className="flex items-center gap-3 shrink-0">
@@ -141,7 +146,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#6B6A66] hover:text-[#141413]'
                 }`}
               >
-                Review
+                {language === 'hi' ? 'समीक्षा' : 'Review'}
               </button>
               <button
                 onClick={() => setActiveTab('compare')}
@@ -151,7 +156,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#6B6A66] hover:text-[#141413]'
                 }`}
               >
-                Compare
+                {language === 'hi' ? 'तुलना' : 'Compare'}
               </button>
               <button
                 onClick={() => setActiveTab('ask')}
@@ -161,7 +166,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#6B6A66] hover:text-[#141413]'
                 }`}
               >
-                Ask Lexi
+                {language === 'hi' ? 'लेक्सी से पूछें' : 'Ask Lexi'}
               </button>
               <button
                 onClick={() => setActiveTab('checklist')}
@@ -171,7 +176,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#6B6A66] hover:text-[#141413]'
                 }`}
               >
-                Checklist
+                {language === 'hi' ? 'जांच सूची' : 'Checklist'}
               </button>
               <button
                 onClick={() => setActiveTab('brief')}
@@ -181,13 +186,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                     : 'text-[#6B6A66] hover:text-[#141413]'
                 }`}
               >
-                Summary
+                {language === 'hi' ? 'सारांश' : 'Summary'}
               </button>
             </nav>
           )}
 
-          {/* Right Actions: Primary "Try LexiLens" + Secondary Demo */}
-          <div className="hidden sm:flex items-center gap-2.5 shrink-0">
+          {/* Right Actions: Primary "Try LexiLens" + Secondary Demo + Language Switcher */}
+          <div className="hidden sm:flex items-center gap-2 shrink-0">
             {/* Real-time status indicator */}
             <div
               className="flex items-center gap-1.5 text-[11px] text-[#6B6A66] font-mono mr-1"
@@ -207,11 +212,56 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span className="hidden xl:inline">{syncStatus === 'connected' ? 'Live' : 'Offline'}</span>
             </div>
 
+            {/* Language Switcher: EN / हिन्दी / Bilingual */}
+            <div
+              className="flex items-center bg-[#F2F2EE] p-0.5 rounded-md border border-[#E2E2DE] text-[11px] font-medium"
+              role="group"
+              aria-label="Language selector"
+            >
+              <Languages className="w-3 h-3 text-[#6B6A66] ml-1.5 mr-0.5" />
+              <button
+                type="button"
+                onClick={() => onSelectLanguage?.('en')}
+                className={`px-1.5 py-0.5 rounded text-[11px] transition-all cursor-pointer ${
+                  language === 'en'
+                    ? 'bg-white text-[#141413] font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+                title="View in English"
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectLanguage?.('hi')}
+                className={`px-1.5 py-0.5 rounded text-[11px] transition-all cursor-pointer ${
+                  language === 'hi'
+                    ? 'bg-[#141413] text-white font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+                title="हिन्दी में देखें (View in Hindi)"
+              >
+                हिन्दी
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectLanguage?.('bilingual')}
+                className={`px-1.5 py-0.5 rounded text-[11px] transition-all cursor-pointer ${
+                  language === 'bilingual'
+                    ? 'bg-emerald-800 text-white font-semibold shadow-xs'
+                    : 'text-[#6B6A66] hover:text-[#141413]'
+                }`}
+                title="द्विभाषी दृश्य (English + हिन्दी)"
+              >
+                Dual
+              </button>
+            </div>
+
             <button
               onClick={onLoadDemo}
-              className="px-3 py-1.5 text-xs font-medium text-[#4A4946] hover:text-[#141413] border border-[#E2E2DE] hover:border-[#141413]/30 rounded-md transition-colors cursor-pointer"
+              className="px-2.5 py-1.5 text-xs font-medium text-[#4A4946] hover:text-[#141413] border border-[#E2E2DE] hover:border-[#141413]/30 rounded-md transition-colors cursor-pointer"
             >
-              Explore Demo
+              {language === 'hi' ? 'डेमो अनुबंध' : 'Explore Demo'}
             </button>
 
             <button
@@ -219,12 +269,29 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="px-3.5 py-1.5 text-xs font-medium text-white bg-[#141413] hover:bg-[#2C2C2A] rounded-md transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Try LexiLens</span>
+              <span>{language === 'hi' ? 'अनुबंध जांचें' : 'Try LexiLens'}</span>
             </button>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-1.5">
+            {/* Mobile Language Toggle */}
+            <div className="flex items-center bg-[#F2F2EE] p-0.5 rounded border border-[#E2E2DE] text-[10px]">
+              <button
+                type="button"
+                onClick={() => onSelectLanguage?.('en')}
+                className={`px-1.5 py-0.5 rounded ${language === 'en' ? 'bg-white font-bold' : 'text-[#6B6A66]'}`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => onSelectLanguage?.('hi')}
+                className={`px-1.5 py-0.5 rounded ${language === 'hi' ? 'bg-[#141413] text-white font-bold' : 'text-[#6B6A66]'}`}
+              >
+                हिन्दी
+              </button>
+            </div>
             <button
               onClick={onOpenUpload}
               className="p-1.5 text-xs font-medium text-white bg-[#141413] rounded-md"

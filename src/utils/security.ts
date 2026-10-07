@@ -4,7 +4,18 @@
  */
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-export const ALLOWED_EXTENSIONS = ['.txt', '.pdf', '.docx', '.md', '.rtf'];
+export const ALLOWED_EXTENSIONS = [
+  '.txt',
+  '.pdf',
+  '.docx',
+  '.doc',
+  '.md',
+  '.rtf',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+];
 export const ALLOWED_MIME_TYPES = [
   'text/plain',
   'text/markdown',
@@ -12,6 +23,9 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/msword',
   'application/rtf',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
 ];
 
 export interface FileValidationResult {
@@ -75,7 +89,7 @@ export function validateDocumentFile(
   if (!isAllowedExt) {
     return {
       valid: false,
-      error: `Unsupported file type "${ext}". Supported formats are TXT, PDF, DOCX, MD, and RTF.`,
+      error: `Unsupported file type "${ext}". Supported formats are TXT, PDF, Word (DOCX/DOC), Images (PNG/JPG), MD, and RTF.`,
     };
   }
 
@@ -93,18 +107,132 @@ export function validateDocumentFile(
 }
 
 /**
- * Strips null bytes, controls, and truncates text to protect backend services.
+ * Strips machine noise, file infrastructure artifacts (PK, [Content_Types].xml, _rels, docProps),
+ * XML/HTML tags, and binary garbage while extracting coherent human-readable legal text.
+ */
+export function extractCleanLegalText(input: unknown): {
+  cleanText: string;
+  hadBinaryNoise: boolean;
+  isScannedOrEmpty: boolean;
+  extractedSections: string[];
+} {
+  if (typeof input !== 'string') {
+    return { cleanText: '', hadBinaryNoise: false, isScannedOrEmpty: true, extractedSections: [] };
+  }
+
+  let text = input;
+  let hadBinaryNoise = false;
+
+  // 1. Detect and filter internal architecture / ZIP / DOCX archive signatures
+  const fileArchPatterns = [
+    /PK\x03\x04[^\n]*/gi,
+    /PK\x05\x06[^\n]*/gi,
+    /PK\x07\x08[^\n]*/gi,
+    /\[Content_Types\]\.xml[^\n]*/gi,
+    /_rels\/\.rels[^\n]*/gi,
+    /(?:word|xl|ppt)\/_rels\/[^\n]*/gi,
+    /docProps\/(?:core|app|custom)\.xml[^\n]*/gi,
+    /word\/(?:document|fontTable|styles|settings|theme\/[a-zA-Z0-9_-]+)\.xml[^\n]*/gi,
+    /customXml\/[^\n]*/gi,
+  ];
+
+  for (const pattern of fileArchPatterns) {
+    if (pattern.test(text)) {
+      hadBinaryNoise = true;
+      text = text.replace(pattern, ' ');
+    }
+  }
+
+  // 2. Strip XML/HTML tags and entity references
+  if (/<[a-zA-Z0-9_\-:]+(\s+[^>]*)?>|<\/[a-zA-Z0-9_\-:]+>|<!--.*?-->/g.test(text)) {
+    hadBinaryNoise = true;
+    text = text
+      .replace(/<!--[\s\S]*?-->/g, ' ')
+      .replace(/<w:tab\/>/gi, '\t')
+      .replace(/<w:br\/>/gi, '\n')
+      .replace(/<\/w:p>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ');
+  }
+
+  // Decode standard XML/HTML entities
+  text = text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ');
+
+  // 3. Remove null bytes and non-printable control characters except newline and tab
+  const rawLengthBefore = text.length;
+  text = text.replace(/\0/g, '').replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '');
+  if (text.length < rawLengthBefore) {
+    hadBinaryNoise = true;
+  }
+
+  // 4. Filter line-by-line: discard machine code, corrupted symbols, or system path residue
+  const rawLines = text.split(/\r?\n/);
+  const cleanLines: string[] = [];
+  const extractedSections: string[] = [];
+
+  for (const line of rawLines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Skip lines that contain lingering system infrastructure fragments
+    if (
+      /^(PK|\[Content_Types\]|_rels|docProps|word\/|xmlns:)/i.test(trimmed) ||
+      /(?:\[Content_Types\]\.xml|_rels\/\.rels|word\/document\.xml)/i.test(trimmed)
+    ) {
+      hadBinaryNoise = true;
+      continue;
+    }
+
+    // Check line readability: ratio of printable legal/natural language characters
+    const naturalChars = trimmed.replace(/[^a-zA-Z0-9\s.,;:!?'"()\[\]{}\-–—₹$€£%&/\\#@*+<=>]/g, '');
+    const ratio = naturalChars.length / trimmed.length;
+
+    // Discard high-entropy corrupted binary garbage lines (e.g., zip compressed payload remnants)
+    if (ratio < 0.65 && trimmed.length > 10) {
+      hadBinaryNoise = true;
+      continue;
+    }
+
+    // Identify structural legal headers
+    const sectionMatch = trimmed.match(
+      /^(?:SECTION\s+\d+(?:\.\d+)?|ARTICLE\s+[IVXLCDM\d]+|CLAUSE\s+\d+(?:\.\d+)?|\d+\.\s+[A-Z][a-zA-Z\s]+|SCOPE OF OBLIGATIONS|COMPENSATION|TERM AND TERMINATION|CONFIDENTIALITY|INTELLECTUAL PROPERTY|GOVERNING LAW|INDEMNIFICATION|LIMITATION OF LIABILITY|DEFINITIONS)/i
+    );
+    if (sectionMatch) {
+      extractedSections.push(sectionMatch[0]);
+    }
+
+    cleanLines.push(trimmed);
+  }
+
+  let cleanText = cleanLines.join('\n').trim();
+
+  // If text is extremely short or has no readable coherent words, flag as scanned/empty
+  const hasCoherentWords = /[a-zA-Z]{3,}/.test(cleanText);
+  const isScannedOrEmpty = cleanText.length < 25 || !hasCoherentWords;
+
+  return {
+    cleanText,
+    hadBinaryNoise,
+    isScannedOrEmpty,
+    extractedSections,
+  };
+}
+
+/**
+ * Strips null bytes, controls, file infrastructure noise, and truncates text to protect backend services.
  */
 export function sanitizeDocumentText(input: unknown, maxLength = 150000): string {
   if (typeof input !== 'string') return '';
-  // Normalize newlines and strip null bytes
-  let clean = input.replace(/\0/g, '').replace(/\r\n/g, '\n');
-  // Strip other dangerous ASCII control chars except newline and tab
-  clean = clean.replace(/[\x01-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '');
-  if (clean.length > maxLength) {
-    clean = clean.substring(0, maxLength);
+  const { cleanText } = extractCleanLegalText(input);
+  if (cleanText.length > maxLength) {
+    return cleanText.substring(0, maxLength);
   }
-  return clean.trim();
+  return cleanText;
 }
 
 /**

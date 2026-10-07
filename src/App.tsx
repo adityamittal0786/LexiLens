@@ -7,6 +7,7 @@ import {
   Jurisdiction,
   ActionChecklistItem,
   DocumentVersion,
+  AppLanguage,
 } from './types';
 import {
   INITIAL_DEMO_DOCUMENTS,
@@ -25,17 +26,21 @@ import { AskLexiChat } from './components/AskLexiChat';
 import { ActionCenter } from './components/ActionCenter';
 import { LawyerBriefModal } from './components/LawyerBriefModal';
 import { DocumentUploadModal } from './components/DocumentUploadModal';
+import { translateAnalysisToHindi } from './utils/hindiTranslator';
 
 export default function App() {
   const [documents, setDocuments] = useState<LegalDocument[]>(INITIAL_DEMO_DOCUMENTS);
   const [activeDocId, setActiveDocId] = useState<string>(INITIAL_DEMO_DOCUMENTS[0].id);
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   const [jurisdiction, setJurisdiction] = useState<Jurisdiction>('doc_only');
-  const [analysis, setAnalysis] = useState<DocumentAnalysis>(SAMPLE_V1_ANALYSIS);
+  const [analysis, setAnalysis] = useState<DocumentAnalysis>(() =>
+    translateAnalysisToHindi(SAMPLE_V1_ANALYSIS)
+  );
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [chatInitialQuestion, setChatInitialQuestion] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [language, setLanguage] = useState<AppLanguage>('en');
 
   const activeDoc = documents.find((d) => d.id === activeDocId) || documents[0];
 
@@ -125,7 +130,7 @@ export default function App() {
   // 1-Click Load Negotiation Demo
   const handleLoadDemo = () => {
     setActiveDocId('doc-demo-v1');
-    setAnalysis(SAMPLE_V1_ANALYSIS);
+    setAnalysis(translateAnalysisToHindi(SAMPLE_V1_ANALYSIS));
     setActiveTab('workspace');
     showToast('Loaded Freelance Services Agreement (Demo V1)');
   };
@@ -171,6 +176,8 @@ export default function App() {
         activeDoc={activeDoc}
         onOpenUpload={() => setIsUploadModalOpen(true)}
         onLoadDemo={handleLoadDemo}
+        language={language}
+        onSelectLanguage={setLanguage}
       />
 
       {/* 3. Toast Notification Pill */}
@@ -190,7 +197,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* 4. Active Tab Router View with Smooth Motion Transitions */}
-      <main className="flex-1 relative z-10">
+      <main className={`flex-1 relative z-10 ${activeTab === 'workspace' || activeTab === 'ask' ? 'min-h-0 overflow-hidden' : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -219,6 +226,7 @@ export default function App() {
                 onOpenChecklist={() => setActiveTab('checklist')}
                 onOpenBrief={() => setActiveTab('brief')}
                 onUpdateDocument={handleUpdateDocument}
+                language={language}
               />
             )}
 
@@ -235,6 +243,7 @@ export default function App() {
                 jurisdiction={jurisdiction}
                 initialQuestion={chatInitialQuestion}
                 onClearInitialQuestion={() => setChatInitialQuestion(null)}
+                language={language}
               />
             )}
 
@@ -258,7 +267,9 @@ export default function App() {
       <footer
         role="contentinfo"
         aria-label="Product navigation and legal disclaimer"
-        className="hairline-t bg-[#FAF9F6] py-12 px-4 sm:px-6 lg:px-8 text-xs text-[#6B6A66]"
+        className={`hairline-t bg-[#FAF9F6] py-12 px-4 sm:px-6 lg:px-8 text-xs text-[#6B6A66] ${
+          activeTab === 'workspace' || activeTab === 'ask' ? 'hidden' : ''
+        }`}
       >
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-8">

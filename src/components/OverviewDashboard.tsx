@@ -209,7 +209,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           1. HERO SECTION: Immediate Clarity, Minimal & Authoritative
       ───────────────────────────────────────────────────────────── */}
       <section className="pt-6 sm:pt-8 lg:pt-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7">
           <div className="max-w-3xl space-y-4 sm:space-y-5">
             {/* Category Label: Unboxed text, zero pills */}
             <div className="flex items-center gap-2 text-xs font-mono tracking-widest uppercase text-[#6B6A66]">
@@ -461,7 +461,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           2. EDITORIAL PROBLEM SECTION: Where Traps Lie Buried
       ───────────────────────────────────────────────────────────── */}
       <section className="py-12 hairline-t hairline-b bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
             {/* Left Narrative Column */}
             <div className="lg:col-span-5 space-y-6">
@@ -544,7 +544,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           3. FROM DOCUMENT TO UNDERSTANDING: The 3-Step Transformation
       ───────────────────────────────────────────────────────────── */}
       <section id="how-it-works" className="py-6 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-8 sm:space-y-10">
           <div className="max-w-2xl space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
               How it works
@@ -612,7 +612,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           4. SIGNATURE INTERACTION: Interactive Legal X-Ray
       ───────────────────────────────────────────────────────────── */}
       <section id="features" className="py-10 hairline-t hairline-b bg-[#FAF9F6] scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-6 sm:space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-1.5 max-w-2xl">
               <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
@@ -701,7 +701,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           5. CONTRACT DIFF: Split-Screen Comparison Showcase
       ───────────────────────────────────────────────────────────── */}
       <section className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
@@ -799,7 +799,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           6. ASK LEXI SHOWCASE: Verifiable Grounded Q&A
       ───────────────────────────────────────────────────────────── */}
       <section className="py-12 hairline-t hairline-b bg-[#FAF9F6]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-8">
           <div className="max-w-2xl space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
               Document Inquiries
@@ -875,7 +875,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           7. BEFORE YOU SIGN: Practical Checklist Experience
       ───────────────────────────────────────────────────────────── */}
       <section className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-2 max-w-2xl">
               <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
@@ -947,7 +947,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           8. TRUST & SAFETY: Calm, Grounded Security
       ───────────────────────────────────────────────────────────── */}
       <section id="security" className="py-10 hairline-t hairline-b bg-[#FAF9F6] scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-6 sm:space-y-8">
           <div className="max-w-2xl space-y-2">
             <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
               Security & Engineering
@@ -1013,7 +1013,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           9. RESPONSIBLE LEGAL ASSISTANCE: Clear Ethical Boundaries
       ───────────────────────────────────────────────────────────── */}
       <section className="py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7">
           <div className="bg-white border border-[#E2E2DE] rounded-xl p-8 sm:p-10 space-y-8">
             <div className="max-w-2xl space-y-2">
               <span className="text-xs font-mono uppercase tracking-widest text-[#6B6A66]">
@@ -1091,7 +1091,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           10. RECENT DOCUMENTS & DEMO LAUNCHER
       ───────────────────────────────────────────────────────────── */}
       <section id="documents" className="py-6 scroll-mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-7 space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <h3 className="font-sans font-semibold text-lg text-[#141413]">

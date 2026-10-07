@@ -28,18 +28,19 @@ export const LawyerBriefModal: React.FC<LawyerBriefModalProps> = ({
   onBackToWorkspace,
 }) => {
   const [userNotes, setUserNotes] = useState(
-    'Meeting scheduled with legal counsel. Primary objectives: reduce liability exposure, push IP transfer to full payment date, and remove post-termination restraint.'
+    `Consultation preparation notes for ${analysis.documentTitle}. Primary objectives: review commitments, verify liability caps, and clarify identified questions.`
   );
   const [copied, setCopied] = useState(false);
 
   const lawyerQuestions: string[] =
     analysis.questionsForLawyer && analysis.questionsForLawyer.length > 0
       ? analysis.questionsForLawyer.flatMap((group) => group.questions.map((q) => q.question))
+      : analysis.potentialIssues && analysis.potentialIssues.length > 0
+      ? analysis.potentialIssues.map((pi) => pi.suggestedQuestion || `How can we address the ${pi.title} clause located at ${pi.location}?`)
       : [
-          'How can we amend Section 4.1 so that copyright and IP transfer to the client ONLY upon receipt of full payment?',
-          'What standard language should we use to limit my total liability to the fees received (₹50,000)?',
-          'Is the 12-month post-termination non-compete enforceable in our jurisdiction (e.g. under Section 27 of Indian Contract Act)?',
-          'Can we remove the 90-day penalty holiday in Section 2.3 and replace it with 1.5% interest after 30 days?',
+          `What are the most significant liabilities or risks in ${analysis.documentTitle}?`,
+          `Are the termination and notice requirements in this ${analysis.documentType} standard?`,
+          `Are there any unbalanced or one-sided obligations that should be renegotiated?`,
         ];
 
   const generateBriefingString = () => {
@@ -55,8 +56,7 @@ Document: ${analysis.documentTitle}
 Title: ${analysis.documentTitle}
 Document Type: ${analysis.documentType}
 Parties:
-- ${analysis.parties[0]?.name} (${analysis.parties[0]?.shortLabel} - ${analysis.parties[0]?.role})
-- ${analysis.parties[1]?.name} (${analysis.parties[1]?.shortLabel} - ${analysis.parties[1]?.role})
+${analysis.parties && analysis.parties.length > 0 ? analysis.parties.map((p) => `- ${p.name || 'Signatory'} (${p.shortLabel || 'Party'}${p.role ? ` - ${p.role}` : ''})`).join('\n') : '- Signatories specified in agreement body'}
 Core Purpose: ${analysis.whatThisDocumentDoes}
 Jurisdiction: ${analysis.jurisdiction === 'india' ? 'India' : analysis.jurisdiction.toUpperCase()}
 

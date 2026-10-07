@@ -1,5 +1,7 @@
 export type Jurisdiction = 'doc_only' | 'india' | 'us' | 'uk' | 'general';
 
+export type AppLanguage = 'en' | 'hi' | 'bilingual';
+
 export type ConfidenceLevel = 'High' | 'Medium' | 'Low';
 
 export type SeverityLevel = 'concern' | 'unclear' | 'obligation' | 'one_sided';
@@ -9,6 +11,7 @@ export interface PartyObligation {
   party: string;
   title: string;
   obligation: string;
+  obligationHindi?: string;
   deadline?: string;
   condition?: string;
   consequence?: string;
@@ -19,6 +22,7 @@ export interface PartyObligation {
 export interface ExtractedClause {
   id: string;
   title: string;
+  titleHindi?: string;
   category: 
     | 'Payment'
     | 'Term'
@@ -36,10 +40,12 @@ export interface ExtractedClause {
     | 'Notice'
     | 'General';
   plainEnglish: string;
+  plainHindi?: string;
   whoItAffects: string;
   obligation: string;
   duration?: string;
   potentialConcern?: string;
+  potentialConcernHindi?: string;
   docReference: string;
   quote: string;
   confidence: ConfidenceLevel;
@@ -49,9 +55,12 @@ export interface ExtractedClause {
 export interface PotentialIssue {
   id: string;
   title: string;
+  titleHindi?: string;
   category: string;
   description: string;
+  descriptionHindi?: string;
   whyItMatters: string;
+  whyItMattersHindi?: string;
   evidence: string;
   location: string;
   confidence: ConfidenceLevel;
@@ -63,7 +72,8 @@ export interface PotentialIssue {
     | 'Missing information'
     | 'Potentially significant obligation'
     | 'Ambiguous language';
-  suggestedQuestion: string;
+  suggestedQuestion?: string;
+  suggestedQuestionHindi?: string;
 }
 
 export interface XRayNode {
@@ -80,10 +90,13 @@ export interface BeforeYouSignItem {
   id: string;
   topic: string;
   question: string;
+  questionHindi?: string;
   status: 'clear' | 'needs_clarification' | 'review_recommended';
   finding: string;
+  findingHindi?: string;
   clauseRef: string;
   lawyerPrompt: string;
+  lawyerPromptHindi?: string;
   domain?: 'payment' | 'termination' | 'liability' | 'ip' | 'confidentiality' | 'renewal' | 'governing_law' | string;
   whatToLookFor?: string;
   whyItMatters?: string;
@@ -100,10 +113,13 @@ export interface LawyerQuestionGroup {
     | 'Intellectual property'
     | 'Privacy'
     | 'Disputes';
+  categoryHindi?: string;
   questions: {
     id: string;
     question: string;
+    questionHindi?: string;
     context: string;
+    contextHindi?: string;
     sectionRef: string;
   }[];
 }
@@ -111,7 +127,9 @@ export interface LawyerQuestionGroup {
 export interface ActionChecklistItem {
   id: string;
   title: string;
+  titleHindi?: string;
   description: string;
+  descriptionHindi?: string;
   sectionRef: string;
   completed: boolean;
   priority: 'High' | 'Medium' | 'Low';
@@ -130,13 +148,20 @@ export interface PotentialNextStep {
 export interface DocumentAnalysis {
   documentId: string;
   documentTitle: string;
+  documentTitleHindi?: string;
   documentType: string;
+  documentTypeHindi?: string;
+  documentText?: string;
   executiveSummary: string;
+  executiveSummaryHindi?: string;
   whatThisDocumentDoes: string;
+  whatThisDocumentDoesHindi?: string;
   parties: {
     name: string;
     role: string;
+    roleHindi?: string;
     shortLabel: string;
+    shortLabelHindi?: string;
   }[];
   partyAObligations: PartyObligation[];
   partyBObligations: PartyObligation[];
@@ -193,6 +218,7 @@ export interface ComparisonDiff {
   category: string;
   clauseTitle: string;
   changeType: 'added' | 'removed' | 'modified' | 'unchanged';
+  isFormattingOnly?: boolean;
   docAQuote?: string;
   docBQuote?: string;
   whatChanged: string;

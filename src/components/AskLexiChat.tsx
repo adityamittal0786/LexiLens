@@ -13,7 +13,7 @@ import {
   DoorOpen,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChatMessage, LegalDocument, Jurisdiction } from '../types';
+import { ChatMessage, LegalDocument, Jurisdiction, AppLanguage } from '../types';
 import { askDocumentAPI } from '../services/api';
 
 interface AskLexiChatProps {
@@ -21,6 +21,7 @@ interface AskLexiChatProps {
   jurisdiction: Jurisdiction;
   initialQuestion?: string | null;
   onClearInitialQuestion?: () => void;
+  language?: AppLanguage;
 }
 
 const CANONICAL_QUESTIONS = [
@@ -28,26 +29,64 @@ const CANONICAL_QUESTIONS = [
     label: 'What am I agreeing to?',
     icon: FileText,
     badge: 'Overview',
+    prompt: 'What am I agreeing to under this contract?',
   },
   {
     label: 'When can I terminate this?',
     icon: DoorOpen,
     badge: 'Exit Rights',
+    prompt: 'When and how can I terminate this agreement?',
   },
   {
     label: 'What payments do I have to make?',
     icon: CreditCard,
     badge: 'Fees & Invoicing',
+    prompt: 'What payments do I have to make and what are the timelines?',
   },
   {
     label: 'Who owns the work?',
     icon: Lightbulb,
     badge: 'IP Transfer',
+    prompt: 'Who owns the intellectual property and code created?',
   },
   {
     label: 'What happens if something goes wrong?',
     icon: AlertTriangle,
     badge: 'Risk & Dispute',
+    prompt: 'What happens if something goes wrong or there is a dispute?',
+  },
+];
+
+const CANONICAL_QUESTIONS_HINDI = [
+  {
+    label: 'मैं किन बातों पर सहमत हो रहा हूँ?',
+    icon: FileText,
+    badge: 'मुख्य सार',
+    prompt: 'इस अनुबंध का मुख्य सार और मेरे लिए क्या नियम हैं, सरल हिन्दी में समझाइए?',
+  },
+  {
+    label: 'भुगतान कब और कैसे मिलेगा?',
+    icon: CreditCard,
+    badge: 'पैसा और फीस',
+    prompt: 'इस अनुबंध में भुगतान की शर्तें और समयसीमा क्या है?',
+  },
+  {
+    label: 'क्या कोई बड़ा जोखिम या नुकसान है?',
+    icon: AlertTriangle,
+    badge: 'जोखिम जांच',
+    prompt: 'क्या इस अनुबंध में कोई असीमित देयता या एकतरफा जोखिम भरी शर्त है?',
+  },
+  {
+    label: 'काम छोड़ने या अनुबंध खत्म करने के नियम?',
+    icon: DoorOpen,
+    badge: 'समाप्ति अधिकार',
+    prompt: 'यदि मैं इस अनुबंध को समाप्त करना चाहूँ, तो कितने दिन का नोटिस देना होगा?',
+  },
+  {
+    label: 'काम और कोड का असली मालिक कौन होगा?',
+    icon: Lightbulb,
+    badge: 'मालिकाना हक',
+    prompt: 'क्या बौद्धिक संपदा और कोड का अधिकार पूरा भुगतान मिलने के बाद ही ट्रांसफर होगा?',
   },
 ];
 
@@ -56,21 +95,36 @@ export const AskLexiChat: React.FC<AskLexiChatProps> = ({
   jurisdiction,
   initialQuestion,
   onClearInitialQuestion,
+  language = 'en',
 }) => {
+  const isHindi = language === 'hi';
+  const isBilingual = language === 'bilingual';
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'msg-welcome',
       role: 'assistant',
-      content: `I am ready to inspect "${document.title}". Every response is strictly grounded in the verbatim text of this document. If a topic is not explicitly mentioned or defined in the agreement, I will state that clearly rather than inferring or speculating.`,
+      content: isHindi
+        ? `नमस्ते! मैं "${document.title}" के विश्लेषण हेतु तैयार हूँ। आप कोई भी सवाल पूछ सकते हैं — जैसे भुगतान कब मिलेगा, क्या कोई जोखिम भरी शर्त है, या काम छोड़ने के क्या नियम हैं। प्रत्येक उत्तर सीधे इस अनुबंध के पाठ पर आधारित होगा।`
+        : isBilingual
+        ? `I am ready to inspect "${document.title}". (हिन्दी): मैं इस अनुबंध के बारे में आपके सभी सवालों के जवाब देने के लिए तैयार हूँ। Every response is strictly grounded in the verbatim text of this document.`
+        : `I am ready to inspect "${document.title}". Every response is strictly grounded in the verbatim text of this document. If a topic is not explicitly mentioned or defined in the agreement, I will state that clearly rather than inferring or speculating.`,
       confidence: 'High',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      suggestedQuestions: [
-        'What am I agreeing to?',
-        'When can I terminate this?',
-        'What payments do I have to make?',
-        'Who owns the work?',
-        'What happens if something goes wrong?',
-      ],
+      suggestedQuestions: isHindi
+        ? [
+            'इस अनुबंध का मुख्य सार क्या है?',
+            'भुगतान कब और कैसे मिलेगा?',
+            'क्या कोई बड़ा जोखिम या लाल झंडी है?',
+            'काम छोड़ने के क्या नियम हैं?',
+          ]
+        : [
+            'What am I agreeing to?',
+            'When can I terminate this?',
+            'What payments do I have to make?',
+            'Who owns the work?',
+            'What happens if something goes wrong?',
+          ],
     },
   ]);
 
@@ -162,7 +216,7 @@ export const AskLexiChat: React.FC<AskLexiChatProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto h-[calc(100vh-140px)] min-h-[520px] flex flex-col bg-white border border-[#E2E2DE] rounded-xl overflow-hidden shadow-xs my-6">
+    <div className="w-full max-w-[1600px] mx-auto h-[calc(100vh-100px)] min-h-0 flex flex-col bg-white border-y lg:border-x border-[#E2E2DE] rounded-none lg:rounded-xl overflow-hidden shadow-xs">
       {/* Header */}
       <div className="p-4 bg-[#F8F8F5] hairline-b flex items-center justify-between shrink-0">
         <div>
@@ -190,19 +244,19 @@ export const AskLexiChat: React.FC<AskLexiChatProps> = ({
         </button>
       </div>
 
-      {/* 1-CLICK QUICK ACCESS SUGGESTED QUESTIONS (Canonical 5) */}
+      {/* 1-CLICK QUICK ACCESS SUGGESTED QUESTIONS */}
       <div className="bg-[#FAF9F6] px-4 py-2.5 hairline-b flex items-center gap-2 overflow-x-auto shrink-0 scrollbar-none">
         <div className="flex items-center gap-1 text-[11px] font-mono text-[#6B6A66] shrink-0 font-medium mr-1">
           <Sparkles className="w-3.5 h-3.5 text-[#1E3A8A]" />
-          <span>Quick 1-Click:</span>
+          <span>{isHindi ? 'त्वरित प्रश्न:' : 'Quick 1-Click:'}</span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
-          {CANONICAL_QUESTIONS.map((cq) => {
+          {(isHindi ? CANONICAL_QUESTIONS_HINDI : CANONICAL_QUESTIONS).map((cq) => {
             const Icon = cq.icon;
             return (
               <button
                 key={cq.label}
-                onClick={() => handleSendMessage(cq.label)}
+                onClick={() => handleSendMessage(cq.prompt || cq.label)}
                 disabled={isLoading}
                 className="px-3 py-1.5 rounded-full bg-white hover:bg-[#141413] hover:text-white border border-[#E2E2DE] text-[#2C2C2A] text-xs font-medium transition-all shadow-2xs whitespace-nowrap cursor-pointer active:scale-95 disabled:opacity-50 flex items-center gap-1.5 group"
                 title={`Run inquiry: "${cq.label}"`}
@@ -347,7 +401,11 @@ export const AskLexiChat: React.FC<AskLexiChatProps> = ({
             aria-label="Ask a question about this contract"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask anything about this contract (or click any quick question above)..."
+            placeholder={
+              isHindi
+                ? 'इस दस्तावेज़ के बारे में कोई भी सवाल पूछें (जैसे फीस, समाप्ति, जोखिम)...'
+                : 'Ask anything about this contract (or click any quick question above)...'
+            }
             className="flex-1 px-3 py-2 bg-white border border-[#E2E2DE] rounded text-xs text-[#141413] placeholder:text-[#A3A29E] focus:outline-none focus:border-[#141413]"
           />
           <button
@@ -357,11 +415,13 @@ export const AskLexiChat: React.FC<AskLexiChatProps> = ({
             className="px-3.5 py-2 rounded bg-[#141413] hover:bg-[#2C2C2A] disabled:opacity-40 text-white text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
           >
             <Send className="w-3.5 h-3.5" />
-            <span>Ask</span>
+            <span>{isHindi ? 'पूछें' : 'Ask'}</span>
           </button>
         </form>
         <p className="text-[10px] font-mono text-[#6B6A66] text-center mt-2">
-          Strictly grounded in contract text. Cites exact excerpts without external speculation.
+          {isHindi
+            ? 'अनुबंध के पाठ पर आधारित सटीक उत्तर · बिना किसी बाहरी अनुमान के प्रामाणिक संदर्भ'
+            : 'Strictly grounded in contract text. Cites exact excerpts without external speculation.'}
         </p>
       </div>
     </div>

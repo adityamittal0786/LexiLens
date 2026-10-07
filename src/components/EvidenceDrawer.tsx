@@ -10,13 +10,14 @@ import {
   Copy,
   Check,
 } from 'lucide-react';
-import { ExtractedClause, PotentialIssue, ConfidenceLevel } from '../types';
+import { AppLanguage, ExtractedClause, PotentialIssue, ConfidenceLevel } from '../types';
 
 interface EvidenceDrawerProps {
   selectedItem: ExtractedClause | PotentialIssue | null;
   onClose: () => void;
   onJumpToDocument: (quote: string, sectionRef: string) => void;
   onAskQuestionAboutItem: (question: string) => void;
+  language?: AppLanguage;
 }
 
 export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
@@ -24,6 +25,7 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
   onClose,
   onJumpToDocument,
   onAskQuestionAboutItem,
+  language = 'en',
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -33,6 +35,16 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
   const quote = isIssue ? selectedItem.evidence : selectedItem.quote;
   const location = isIssue ? selectedItem.location : selectedItem.docReference;
   const confidence = selectedItem.confidence;
+  const isHindi = language !== 'en';
+  const plainMeaning = isIssue
+    ? (isHindi && selectedItem.descriptionHindi) || selectedItem.description
+    : (isHindi && selectedItem.plainHindi) || selectedItem.plainEnglish;
+  const significance = isIssue
+    ? (isHindi && selectedItem.whyItMattersHindi) || selectedItem.whyItMatters
+    : (isHindi && selectedItem.potentialConcernHindi) || selectedItem.potentialConcern;
+  const suggestedQuestion = isIssue
+    ? (isHindi && selectedItem.suggestedQuestionHindi) || selectedItem.suggestedQuestion
+    : undefined;
 
   const handleCopyQuote = () => {
     navigator.clipboard.writeText(quote);
@@ -129,10 +141,10 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
         {/* Plain Language Interpretation */}
         <div className="space-y-1.5">
           <label className="text-xs font-mono uppercase tracking-wider text-[#6B6A66] block">
-            Plain-English Meaning
+            {isHindi ? 'सरल भाषा में अर्थ' : 'Plain-English Meaning'}
           </label>
           <div className="p-3 bg-white rounded border border-[#E2E2DE] text-[#2C2C2A] leading-relaxed">
-            {isIssue ? selectedItem.description : selectedItem.plainEnglish}
+            {plainMeaning}
           </div>
         </div>
 
@@ -141,16 +153,16 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
           <div className="space-y-1.5">
             <label className="text-xs font-mono uppercase tracking-wider text-amber-900 flex items-center gap-1">
               <AlertTriangle className="w-3 h-3 text-amber-700" />
-              Significance & Risk
+              {isHindi ? 'महत्व और जोखिम' : 'Significance & Risk'}
             </label>
             <div className="p-3 bg-amber-50/40 rounded border border-amber-200 text-[#141413] leading-relaxed text-xs">
-              {isIssue ? selectedItem.whyItMatters : selectedItem.potentialConcern}
+              {significance}
             </div>
           </div>
         )}
 
         {/* Suggested Question to Ask a Lawyer or Client */}
-        {isIssue && selectedItem.suggestedQuestion && (
+        {isIssue && suggestedQuestion && (
           <div className="space-y-1.5">
             <label className="text-xs font-mono uppercase tracking-wider text-[#6B6A66] flex items-center gap-1">
               <HelpCircle className="w-3 h-3 text-[#1E3A8A]" />
@@ -158,10 +170,10 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
             </label>
             <div className="p-3 bg-white rounded border border-[#E2E2DE] text-[#2C2C2A] leading-relaxed text-xs shadow-xs space-y-2.5">
               <p className="italic font-serif text-[#141413]">
-                "{selectedItem.suggestedQuestion}"
+                "{suggestedQuestion}"
               </p>
               <button
-                onClick={() => onAskQuestionAboutItem(selectedItem.suggestedQuestion)}
+                onClick={() => onAskQuestionAboutItem(suggestedQuestion)}
                 className="w-full py-1.5 px-3 rounded bg-[#141413] hover:bg-[#2C2C2A] text-white font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <MessageSquare className="w-3.5 h-3.5" />
